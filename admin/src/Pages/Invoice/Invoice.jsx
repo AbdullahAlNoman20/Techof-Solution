@@ -72,7 +72,7 @@ export default function Invoice() {
   const [previousDue, setPreviousDue] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
   const [notes, setNotes] = useState(
-    "Thank you for choosing TechOf Solution Ltd.\nPayment should be completed before the due date.\nThis invoice is system generated."
+    "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated."
   );
   const [bank, setBank] = useState(initialBank);
   const [signatures, setSignatures] = useState({ authorizedByDate: "" });
