@@ -1,4 +1,3 @@
-// admin/src/Components/Nav.jsx
 
 import { useState } from "react";
 import { Link, NavLink } from "react-router-dom";
@@ -22,30 +21,23 @@ export default function Nav() {
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
         <Link to="/" className="flex items-center gap-2">
           <img
-            src="/Image/logo.png"
-            alt="TechOf Solution."
+            src="/public/Image/Techof Logo 2.jpeg"
+            alt="TechOf Solution"
             onError={(e) => (e.currentTarget.style.display = "none")}
-            className="w-9 h-9 object-contain bg-white rounded-md p-0.5"
-          />
+            className="w-9 h-9 object-contain bg-white rounded-md p-0.5" />
           <div className="leading-tight">
             <p className="text-white font-bold text-sm">TechOf Solution.</p>
-            <p className="text-white/70 text-[10px] italic">
-              Smart Mind Smart Solution
-            </p>
+            <p className="text-white/70 text-[10px] italic">We Don't Just Build Tech. We Give It Lift-Off.</p>
           </div>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
           {LINKS.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className={linkClass}
-              end={l.to === "/"}
-            >
+            <NavLink key={l.to} to={l.to} className={linkClass} end={l.to === "/"}>
               {l.label}
             </NavLink>
           ))}
+          
         </div>
 
         <button
@@ -53,8 +45,7 @@ export default function Nav() {
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
           aria-expanded={open}
-          className="md:hidden text-white text-xl w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10"
-        >
+          className="md:hidden text-white text-xl w-9 h-9 flex items-center justify-center rounded-lg hover:bg-white/10">
           <i className={`fa-solid ${open ? "fa-xmark" : "fa-bars"}`} />
         </button>
       </div>
@@ -62,13 +53,7 @@ export default function Nav() {
       {open && (
         <div className="md:hidden bg-[#1B263B] px-4 pb-3 flex flex-col gap-1">
           {LINKS.map((l) => (
-            <NavLink
-              key={l.to}
-              to={l.to}
-              className={linkClass}
-              end={l.to === "/"}
-              onClick={() => setOpen(false)}
-            >
+            <NavLink key={l.to} to={l.to} className={linkClass} end={l.to === "/"} onClick={() => setOpen(false)}>
               {l.label}
             </NavLink>
           ))}

@@ -1,4 +1,4 @@
-// admin/src/Pages/Invoice/Invoice.jsx
+import techofLogo from "../../assets/Techof Logo 2.jpeg";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
@@ -19,7 +19,7 @@ const COMPANY = {
   email: "info@techofsolution.com",
   website: "www.techofsolution.com",
   binVat: "000000000-0000",
-  logo: "/public/Image/Techof Logo 2.jpeg",
+  logo: techofLogo,
 };
 
 const PAYMENT_METHODS = ["Cash", "Bank", "Bkash", "Nagad", "Rocket", "Cheque", "Online Transfer"];
@@ -191,28 +191,39 @@ export default function Invoice() {
   const generatedAt = useMemo(() => new Date().toLocaleString("en-GB"), []);
 
   return (
-    <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center gap-4 print:bg-white print:p-0 print:min-h-0">
-      {/* Print-scoped rules: only #invoice-print-area renders on paper, sized to A4 */}
+    <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center gap-4 print:block print:bg-white print:p-0 print:min-h-0">
+      {/*
+        Print rules:
+        - No absolute positioning / inset:0 (that pins bottom to the first page and
+          combined with overflow-hidden clips every page after the first one).
+        - The print area stays in normal document flow (position: static, overflow: visible)
+          so the browser can paginate it across as many A4 pages as needed.
+        - break-inside: avoid on each section/header/footer stops a section splitting
+          mid-way; if it doesn't fit the remaining space it drops whole to the next page.
+      */}
       <style>{`
         @media print {
-          @page { size: A4; margin: 8mm; }
+          @page { size: A4; margin: 10mm; }
           html, body { height: auto !important; }
           body * { visibility: hidden !important; }
           #invoice-print-area, #invoice-print-area * { visibility: visible !important; }
           #invoice-print-area {
-            position: absolute !important;
-            inset: 0 !important;
-            width: 194mm !important;
+            position: static !important;
+            display: block !important;
+            width: 100% !important;
+            max-width: none !important;
             box-shadow: none !important;
             border-radius: 0 !important;
-            margin: 0 auto !important;
-            padding: 6mm !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
             font-size: 11px !important;
           }
           #invoice-print-area section,
           #invoice-print-area header,
           #invoice-print-area footer {
             break-inside: avoid !important;
+            page-break-inside: avoid !important;
           }
           #invoice-print-area h1 { font-size: 15px !important; }
           #invoice-print-area h3 { font-size: 10px !important; }
@@ -243,7 +254,7 @@ export default function Invoice() {
       {/* Invoice sheet — this is exactly what gets printed */}
       <div
         id="invoice-print-area"
-        className="relative w-full max-w-[820px] bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none p-8 overflow-hidden"
+        className="relative w-full max-w-[820px] bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none p-8 print:p-0"
       >
         {/* Watermark */}
         <img
@@ -251,7 +262,7 @@ export default function Invoice() {
           alt=""
           aria-hidden="true"
           onError={(e) => (e.currentTarget.style.display = "none")}
-          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0"
+          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0 print:hidden"
         />
 
         {/* Header */}
@@ -482,8 +493,8 @@ export default function Invoice() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="relative z-10 text-center text-[10px] text-slate-500 mt-5 print:mt-3 pt-3 border-t-4 border-[#0A66C2] leading-relaxed print:break-inside-avoid">
+        {/* Footer — always the last block in the flow, so it naturally lands at the end of the last page */}
+        <footer className="relative z-10 text-center text-[10px] text-slate-500 mt-5 print:mt-3 pt-3 border-t-4 border-[#0A66C2] leading-relaxed">
           <p>Copyright © {new Date().getFullYear()} {COMPANY.name} · {COMPANY.website} · {COMPANY.email} · {COMPANY.phone}</p>
           <p className="font-semibold text-[#1B263B] mt-1">Thank you for your business.</p>
         </footer>

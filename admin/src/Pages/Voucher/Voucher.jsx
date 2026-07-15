@@ -1,4 +1,4 @@
-// admin/src/Pages/Voucher/Voucher.jsx
+import techofLogo from "../../assets/Techof Logo 2.jpeg";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
@@ -20,7 +20,7 @@ const COMPANY = {
   website: "www.techofsolution.com",
   tradeLicense: "TRAD/DHK/000000/2024",
   binVat: "000000000-0000",
-  logo: "/public/Image/Techof Logo 2.jpeg",
+  logo: techofLogo,
 };
 
 const EXPENSE_CATEGORIES = [
@@ -169,9 +169,49 @@ export default function Voucher() {
   const generatedAt = useMemo(() => new Date().toLocaleString("en-GB"), []);
 
   return (
-    <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center gap-4 print:bg-white print:p-0 print:min-h-0">
-      {/* Print-scoped rules: only #voucher-print-area renders on paper, sized to A4 */}
-      TechOf Solution.
+    <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center gap-4 print:block print:bg-white print:p-0 print:min-h-0">
+      {/*
+        Print rules:
+        - No absolute positioning / inset:0 (that pins bottom to the first page and
+          combined with overflow-hidden clips every page after the first one).
+        - The print area stays in normal document flow (position: static, overflow: visible)
+          so the browser can paginate it across as many A4 pages as needed.
+        - break-inside: avoid on each section/header/footer stops a section splitting
+          mid-way; if it doesn't fit the remaining space it drops whole to the next page.
+      */}
+      <style>{`
+        @media print {
+          @page { size: A4; margin: 10mm; }
+          html, body { height: auto !important; }
+          body * { visibility: hidden !important; }
+          #voucher-print-area, #voucher-print-area * { visibility: visible !important; }
+          #voucher-print-area {
+            position: static !important;
+            display: block !important;
+            width: 100% !important;
+            max-width: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            overflow: visible !important;
+            font-size: 11px !important;
+          }
+          #voucher-print-area section,
+          #voucher-print-area header,
+          #voucher-print-area footer {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          #voucher-print-area h1 { font-size: 15px !important; }
+          #voucher-print-area h2 { font-size: 17px !important; }
+          #voucher-print-area h3 { font-size: 10px !important; }
+          #voucher-print-area table { font-size: 10.5px !important; }
+          #voucher-print-area input,
+          #voucher-print-area select,
+          #voucher-print-area textarea { font-size: 10.5px !important; }
+        }
+      `}</style>
 
       {/* Minimal toolbar */}
       <div className="w-full max-w-[820px] flex items-center gap-2 print:hidden">
@@ -193,20 +233,20 @@ export default function Voucher() {
       {/* Voucher sheet — this is exactly what gets printed */}
       <div
         id="voucher-print-area"
-        className="relative w-full max-w-[820px] bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none p-8 overflow-hidden"
+        className="relative w-full max-w-[820px] bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none p-8 print:p-0"
       >
         {/* Watermark */}
         <img
-          src="/public/Image/Techof Logo 2.jpeg"
+          src={COMPANY.logo}
           alt=""
           aria-hidden="true"
           onError={(e) => (e.currentTarget.style.display = "none")}
-          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0"
+          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0 print:hidden"
         />
 
         {/* Header */}
-        <header className="relative z-10 grid grid-cols-3 gap-3 items-start pb-4 border-b-2 border-[#0a2540]">
-          <div className="flex items-center">
+        <header className="relative z-10 grid grid-cols-3 gap-3 items-start pb-3 border-b-2 border-[#0a2540] print:pb-2">
+          <div className="flex items-center gap-3">
             <img
               src={COMPANY.logo}
               alt={`${COMPANY.name} logo`}
@@ -234,7 +274,7 @@ export default function Voucher() {
         </header>
 
         {/* Voucher Info */}
-        <section className="relative z-10 grid grid-cols-3 gap-x-4 gap-y-3 mt-5 rounded-xl bg-slate-50 border border-slate-200 p-4 text-[12px]">
+        <section className="relative z-10 grid grid-cols-3 gap-x-4 gap-y-2 mt-4 print:mt-2 rounded-xl bg-slate-50 border border-slate-200 p-4 print:p-2.5 text-[12px]">
           <Field label="Voucher No.">
             <input value={header.voucherNo} readOnly className="w-full bg-transparent font-semibold text-[#0a2540] outline-none" />
           </Field>
@@ -265,7 +305,7 @@ export default function Voucher() {
         </section>
 
         {/* Expense Table */}
-        <section className="relative z-10 mt-6">
+        <section className="relative z-10 mt-5 print:mt-3">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540]">Expense Details</h3>
             <button type="button" onClick={addRow}
@@ -280,12 +320,12 @@ export default function Voucher() {
             <table className="w-full text-[12px] border-collapse">
               <thead>
                 <tr className="bg-[#0a2540] text-white text-[11px]">
-                  <th className="p-2 text-left w-[4%]">SL</th>
-                  <th className="p-2 text-left w-[34%]">Expense Description</th>
-                  <th className="p-2 text-left w-[20%]">Category</th>
-                  <th className="p-2 text-right w-[10%]">Quantity</th>
-                  <th className="p-2 text-left w-[12%]">Unit</th>
-                  <th className="p-2 text-right w-[14%]">Amount (BDT)</th>
+                  <th className="p-2 print:p-1 text-left w-[4%]">SL</th>
+                  <th className="p-2 print:p-1 text-left w-[34%]">Expense Description</th>
+                  <th className="p-2 print:p-1 text-left w-[20%]">Category</th>
+                  <th className="p-2 print:p-1 text-right w-[10%]">Quantity</th>
+                  <th className="p-2 print:p-1 text-left w-[12%]">Unit</th>
+                  <th className="p-2 print:p-1 text-right w-[14%]">Amount (BDT)</th>
                   <th className="p-2 w-[6%] print:hidden"></th>
                 </tr>
               </thead>
@@ -334,11 +374,11 @@ export default function Voucher() {
         </section>
 
         {/* Purpose & Remarks (merged) + Summary */}
-        <section className="relative z-10 grid grid-cols-2 gap-4 mt-6">
-          <div className="rounded-xl border border-slate-200 p-4">
+        <section className="relative z-10 grid grid-cols-2 gap-4 mt-5 print:mt-3">
+          <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">Purpose &amp; Remarks</h3>
             <textarea
-              rows={6}
+              rows={4}
               maxLength={700}
               value={notes}
               placeholder="e.g. Purchase of office networking equipment for development department. Any additional remarks can be added here."
@@ -347,7 +387,7 @@ export default function Voucher() {
             />
           </div>
 
-          <div className="rounded-xl border border-slate-200 p-4">
+          <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">Expense Summary</h3>
             <SummaryLine label="Subtotal" value={`৳ ${formatCurrency(subtotal)}`} />
             <SummaryEditLine label="VAT (%)" value={vatPercent} onChange={(v) => setVatPercent(clampNumber(v, 0, 100))} />
@@ -366,8 +406,8 @@ export default function Voucher() {
         </section>
 
         {/* Supporting Documents */}
-        <section className="relative z-10 mt-6 rounded-xl border border-slate-200 p-4">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-3">Supporting Documents</h3>
+        <section className="relative z-10 mt-5 print:mt-3 rounded-xl border border-slate-200 p-4 print:p-2.5">
+          <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">Supporting Documents</h3>
           <div className="grid grid-cols-3 gap-2 text-[12px]">
             {DOC_CHECKS.map((d) => (
               <label key={d.key} className="flex items-center gap-2 text-slate-700">
@@ -380,8 +420,8 @@ export default function Voucher() {
         </section>
 
         {/* Approval — Verified & Approved only */}
-        <section className="relative z-10 grid grid-cols-2 gap-6 mt-8">
-          <div className="border-t border-slate-300 pt-2 space-y-2">
+        <section className="relative z-10 grid grid-cols-2 gap-6 mt-5 print:mt-3">
+          <div className="border-t border-slate-300 pt-2 space-y-1.5">
             <p className="text-[11px] font-bold uppercase text-[#0a2540]">Verified By</p>
             <input value={signatures.verifiedByName}
               onChange={(e) => updateSignature("verifiedByName", e.target.value, 80)}
@@ -392,7 +432,7 @@ export default function Voucher() {
               className="text-[11px] outline-none bg-transparent" />
           </div>
 
-          <div className="border-t border-slate-300 pt-2 space-y-2 text-right">
+          <div className="border-t border-slate-300 pt-2 space-y-1.5 text-right">
             <p className="text-[11px] font-bold uppercase text-[#0a2540]">Approved By</p>
             <input value={signatures.approvedByName}
               onChange={(e) => updateSignature("approvedByName", e.target.value, 80)}
@@ -405,7 +445,7 @@ export default function Voucher() {
         </section>
 
         {/* Security strip */}
-        <section className="relative z-10 flex items-center gap-6 mt-8 pt-4 border-t border-dashed border-slate-300">
+        <section className="relative z-10 flex items-center gap-6 mt-5 print:mt-3 pt-3 border-t border-dashed border-slate-300">
           <div ref={qrRef} className="w-[76px] h-[76px]" />
           <svg ref={barcodeRef} className="max-w-[190px]" />
           <div className="ml-auto text-[10px] text-slate-500 text-right">
@@ -414,8 +454,8 @@ export default function Voucher() {
           </div>
         </section>
 
-        {/* Footer */}
-        <footer className="relative z-10 text-center text-[10px] text-slate-500 mt-6 pt-3 border-t-4 border-[#1d4ed8] leading-relaxed">
+        {/* Footer — always the last block in the flow, so it naturally lands at the end of the last page */}
+        <footer className="relative z-10 text-center text-[10px] text-slate-500 mt-5 print:mt-3 pt-3 border-t-4 border-[#1d4ed8] leading-relaxed">
           <p>This voucher is an official internal financial record of {COMPANY.name}.</p>
           <p>All expenses are subject to company accounting policy and audit verification.</p>
           <p>Generated by TechOf Solution ERP · Copyright © {new Date().getFullYear()} {COMPANY.name}</p>
