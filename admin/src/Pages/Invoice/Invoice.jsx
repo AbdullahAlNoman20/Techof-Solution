@@ -352,7 +352,7 @@ export default function Invoice() {
               <i className="fa-solid fa-location-dot w-3 text-[#0A66C2] mr-1" />
               {COMPANY.address}
             </p>
-            <p>BIN/VAT: {COMPANY.binVat}</p>
+            {/* <p>BIN/VAT: {COMPANY.binVat}</p> */}
           </div>
         </header>
 
@@ -592,13 +592,28 @@ export default function Invoice() {
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">
               Notes
             </h3>
-            <textarea
-              rows={4}
-              maxLength={600}
-              value={notes}
-              onChange={(e) => setNotes(sanitizeText(e.target.value, 600))}
-              className="w-full text-[12px] text-slate-700 outline-none resize-none bg-slate-50 rounded-lg p-2 leading-relaxed"
-            />
+
+            <div className="w-full min-h-[112px] text-[12px] text-slate-700 rounded-lg leading-relaxed">
+              <p className="font-semibold text-[#1B263B]">
+                Thank You for Choosing Techof Solution!
+              </p>
+
+              <p className="mt-2">
+                We sincerely appreciate your trust and the opportunity to serve
+                you. This invoice serves as an official record of the products
+                and/or services provided.
+              </p>
+
+              <p className="mt-2">
+                Please retain this invoice for your records. If you have any
+                questions regarding this invoice or require further assistance,
+                our support team will be happy to help.
+              </p>
+
+              <p className="mt-2 font-medium text-[#0A66C2]">
+                We look forward to serving you again.
+              </p>
+            </div>
           </div>
 
           <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
