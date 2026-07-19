@@ -1,5 +1,5 @@
 import techofLogo from "../../assets/Techof Logo 2.jpeg";
-
+import signatureImg from "../../assets/Noman_Signature.jpg";
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -22,7 +22,15 @@ const COMPANY = {
   logo: techofLogo,
 };
 
-const PAYMENT_METHODS = ["Cash", "Bank", "Bkash", "Nagad", "Rocket", "Cheque", "Online Transfer"];
+const PAYMENT_METHODS = [
+  "Cash",
+  "Bank",
+  "Bkash",
+  "Nagad",
+  "Rocket",
+  "Cheque",
+  "Online Transfer",
+];
 const CURRENCIES = ["BDT", "USD", "EUR", "GBP"];
 const STATUS_STYLES = {
   Paid: "bg-emerald-100 text-emerald-700 border border-emerald-300",
@@ -47,7 +55,11 @@ const addDaysISO = (days) => {
 };
 
 const initialClient = () => ({
-  name: "", company: "", contact: "", email: "", address: "",
+  name: "",
+  company: "",
+  contact: "",
+  email: "",
+  address: "",
 });
 
 const initialInvoiceInfo = () => ({
@@ -60,8 +72,13 @@ const initialInvoiceInfo = () => ({
 });
 
 const initialBank = () => ({
-  bankName: "", accountName: "", accountNumber: "",
-  branch: "", bkash: "", nagad: "", rocket: "",
+  bankName: "",
+  accountName: "",
+  accountNumber: "",
+  branch: "",
+  bkash: "",
+  nagad: "",
+  rocket: "",
 });
 
 export default function Invoice() {
@@ -72,7 +89,7 @@ export default function Invoice() {
   const [previousDue, setPreviousDue] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
   const [notes, setNotes] = useState(
-    "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated."
+    "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated.",
   );
   const [bank, setBank] = useState(initialBank);
   const [signatures, setSignatures] = useState({ authorizedByDate: "" });
@@ -82,23 +99,34 @@ export default function Invoice() {
   const barcodeRef = useRef(null);
 
   const subtotal = useMemo(
-    () => rows.reduce((sum, r) => sum + clampNumber(r.qty) * clampNumber(r.unitPrice), 0),
-    [rows]
+    () =>
+      rows.reduce(
+        (sum, r) => sum + clampNumber(r.qty) * clampNumber(r.unitPrice),
+        0,
+      ),
+    [rows],
   );
   const totalDiscount = useMemo(
     () => rows.reduce((sum, r) => sum + clampNumber(r.discount), 0),
-    [rows]
+    [rows],
   );
   const totalVat = useMemo(
     () =>
       rows.reduce((sum, r) => {
-        const base = clampNumber(r.qty) * clampNumber(r.unitPrice) - clampNumber(r.discount);
+        const base =
+          clampNumber(r.qty) * clampNumber(r.unitPrice) -
+          clampNumber(r.discount);
         return sum + (base * clampNumber(r.vat, 0, 100)) / 100;
       }, 0),
-    [rows]
+    [rows],
   );
   const grandTotal = useMemo(() => {
-    const total = subtotal - totalDiscount + totalVat + clampNumber(additionalCharges) + clampNumber(previousDue);
+    const total =
+      subtotal -
+      totalDiscount +
+      totalVat +
+      clampNumber(additionalCharges) +
+      clampNumber(previousDue);
     return total > 0 ? total : 0;
   }, [subtotal, totalDiscount, totalVat, additionalCharges, previousDue]);
   const amountDue = useMemo(() => {
@@ -107,12 +135,17 @@ export default function Invoice() {
   }, [grandTotal, paidAmount]);
 
   const amountInWords = useMemo(
-    () => numberToWords(grandTotal, info.currency === "BDT" ? "Taka" : info.currency),
-    [grandTotal, info.currency]
+    () =>
+      numberToWords(
+        grandTotal,
+        info.currency === "BDT" ? "Taka" : info.currency,
+      ),
+    [grandTotal, info.currency],
   );
 
   const rowTotal = (r) => {
-    const base = clampNumber(r.qty) * clampNumber(r.unitPrice) - clampNumber(r.discount);
+    const base =
+      clampNumber(r.qty) * clampNumber(r.unitPrice) - clampNumber(r.discount);
     const vatAmt = (base * clampNumber(r.vat, 0, 100)) / 100;
     return base + vatAmt;
   };
@@ -121,18 +154,25 @@ export default function Invoice() {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
-        if (field === "description") return { ...r, description: sanitizeText(value, 250) };
-        if (field === "qty") return { ...r, qty: clampNumber(value, 0, 100000) };
-        if (field === "unitPrice") return { ...r, unitPrice: clampNumber(value, 0, 99999999) };
-        if (field === "discount") return { ...r, discount: clampNumber(value, 0, 99999999) };
+        if (field === "description")
+          return { ...r, description: sanitizeText(value, 250) };
+        if (field === "qty")
+          return { ...r, qty: clampNumber(value, 0, 100000) };
+        if (field === "unitPrice")
+          return { ...r, unitPrice: clampNumber(value, 0, 99999999) };
+        if (field === "discount")
+          return { ...r, discount: clampNumber(value, 0, 99999999) };
         if (field === "vat") return { ...r, vat: clampNumber(value, 0, 100) };
         return r;
-      })
+      }),
     );
   }, []);
 
   const addRow = () => setRows((prev) => [...prev, emptyRow()]);
-  const removeRow = (id) => setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev));
+  const removeRow = (id) =>
+    setRows((prev) =>
+      prev.length > 1 ? prev.filter((r) => r.id !== id) : prev,
+    );
 
   const updateClient = (field, value, maxLen = 120) =>
     setClient((prev) => ({ ...prev, [field]: sanitizeText(value, maxLen) }));
@@ -141,14 +181,18 @@ export default function Invoice() {
   const updateBank = (field, value, maxLen = 100) =>
     setBank((prev) => ({ ...prev, [field]: sanitizeText(value, maxLen) }));
   const updateSignature = (field, value, maxLen = 20) =>
-    setSignatures((prev) => ({ ...prev, [field]: sanitizeText(value, maxLen) }));
+    setSignatures((prev) => ({
+      ...prev,
+      [field]: sanitizeText(value, maxLen),
+    }));
 
   const validate = () => {
     const errs = {};
     if (!client.name.trim()) errs.clientName = "Required";
     if (!info.invoiceDate) errs.invoiceDate = "Required";
     if (!info.dueDate) errs.dueDate = "Required";
-    if (rows.every((r) => !r.description.trim())) errs.rows = "Add at least one service line";
+    if (rows.every((r) => !r.description.trim()))
+      errs.rows = "Add at least one service line";
     setErrors(errs);
     return Object.keys(errs).length === 0;
   };
@@ -169,7 +213,9 @@ export default function Invoice() {
           height: 76,
           correctLevel: window.QRCode.CorrectLevel.M,
         });
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
   }, [info.invoiceNo, info.invoiceDate, grandTotal, info.currency]);
 
@@ -184,7 +230,9 @@ export default function Invoice() {
           margin: 4,
           displayValue: true,
         });
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
   }, [info.invoiceNo]);
 
@@ -275,8 +323,12 @@ export default function Invoice() {
               className="w-14 h-14 object-contain"
             />
             <div>
-              <h1 className="text-lg font-bold text-[#1B263B]">{COMPANY.name}</h1>
-              <p className="text-[11px] italic text-[#0A66C2]">{COMPANY.tagline}</p>
+              <h1 className="text-lg font-bold text-[#1B263B]">
+                {COMPANY.name}
+              </h1>
+              <p className="text-[11px] italic text-[#0A66C2]">
+                {COMPANY.tagline}
+              </p>
               <span className="inline-block mt-1.5 text-[10px] font-bold tracking-widest text-white bg-[#0A66C2] px-2.5 py-0.5 rounded-full">
                 INVOICE
               </span>
@@ -284,10 +336,22 @@ export default function Invoice() {
           </div>
 
           <div className="text-right text-[10.5px] text-slate-600 leading-relaxed">
-            <p><i className="fa-solid fa-phone w-3 text-[#0A66C2] mr-1" />{COMPANY.phone}</p>
-            <p><i className="fa-solid fa-envelope w-3 text-[#0A66C2] mr-1" />{COMPANY.email}</p>
-            <p><i className="fa-solid fa-globe w-3 text-[#0A66C2] mr-1" />{COMPANY.website}</p>
-            <p><i className="fa-solid fa-location-dot w-3 text-[#0A66C2] mr-1" />{COMPANY.address}</p>
+            <p>
+              <i className="fa-solid fa-phone w-3 text-[#0A66C2] mr-1" />
+              {COMPANY.phone}
+            </p>
+            <p>
+              <i className="fa-solid fa-envelope w-3 text-[#0A66C2] mr-1" />
+              {COMPANY.email}
+            </p>
+            <p>
+              <i className="fa-solid fa-globe w-3 text-[#0A66C2] mr-1" />
+              {COMPANY.website}
+            </p>
+            <p>
+              <i className="fa-solid fa-location-dot w-3 text-[#0A66C2] mr-1" />
+              {COMPANY.address}
+            </p>
             <p>BIN/VAT: {COMPANY.binVat}</p>
           </div>
         </header>
@@ -295,28 +359,65 @@ export default function Invoice() {
         {/* Bill To / Invoice Details */}
         <section className="relative z-10 grid grid-cols-2 gap-4 mt-4 print:mt-2">
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 print:p-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">Bill To</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">
+              Bill To
+            </h3>
             <div className="space-y-2 text-[12px]">
-              <LabeledInput label="Client Name" value={client.name} error={errors.clientName}
-                onChange={(v) => updateClient("name", v)} />
-              <LabeledInput label="Company Name" value={client.company} onChange={(v) => updateClient("company", v)} />
-              <LabeledInput label="Contact Number" value={client.contact} onChange={(v) => updateClient("contact", v, 30)} />
-              <LabeledInput label="Email" type="email" value={client.email} onChange={(v) => updateClient("email", v)} />
-              <LabeledInput label="Billing Address" value={client.address} onChange={(v) => updateClient("address", v, 200)} />
+              <LabeledInput
+                label="Client Name"
+                value={client.name}
+                error={errors.clientName}
+                onChange={(v) => updateClient("name", v)}
+              />
+              <LabeledInput
+                label="Company Name"
+                value={client.company}
+                onChange={(v) => updateClient("company", v)}
+              />
+              <LabeledInput
+                label="Contact Number"
+                value={client.contact}
+                onChange={(v) => updateClient("contact", v, 30)}
+              />
+              <LabeledInput
+                label="Email"
+                type="email"
+                value={client.email}
+                onChange={(v) => updateClient("email", v)}
+              />
+              <LabeledInput
+                label="Billing Address"
+                value={client.address}
+                onChange={(v) => updateClient("address", v, 200)}
+              />
             </div>
           </div>
 
           <div className="rounded-xl bg-slate-50 border border-slate-200 p-4 print:p-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">Invoice Details</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">
+              Invoice Details
+            </h3>
             <div className="space-y-2 text-[12px]">
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Invoice No.</span>
-                <span className="font-semibold text-[#1B263B]">{info.invoiceNo}</span>
+                <span className="font-semibold text-[#1B263B]">
+                  {info.invoiceNo}
+                </span>
               </div>
-              <LabeledInput label="Invoice Date" type="date" value={info.invoiceDate} error={errors.invoiceDate}
-                onChange={(v) => updateInfo("invoiceDate", v, 20)} />
-              <LabeledInput label="Due Date" type="date" value={info.dueDate} error={errors.dueDate}
-                onChange={(v) => updateInfo("dueDate", v, 20)} />
+              <LabeledInput
+                label="Invoice Date"
+                type="date"
+                value={info.invoiceDate}
+                error={errors.invoiceDate}
+                onChange={(v) => updateInfo("invoiceDate", v, 20)}
+              />
+              <LabeledInput
+                label="Due Date"
+                type="date"
+                value={info.dueDate}
+                error={errors.dueDate}
+                onChange={(v) => updateInfo("dueDate", v, 20)}
+              />
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Payment Status</span>
                 <select
@@ -331,16 +432,30 @@ export default function Invoice() {
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Payment Method</span>
-                <select value={info.paymentMethod} onChange={(e) => updateInfo("paymentMethod", e.target.value)}
-                  className="bg-transparent outline-none text-right">
-                  {PAYMENT_METHODS.map((p) => <option key={p} value={p}>{p}</option>)}
+                <select
+                  value={info.paymentMethod}
+                  onChange={(e) => updateInfo("paymentMethod", e.target.value)}
+                  className="bg-transparent outline-none text-right"
+                >
+                  {PAYMENT_METHODS.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex justify-between items-center">
                 <span className="text-slate-500">Currency</span>
-                <select value={info.currency} onChange={(e) => updateInfo("currency", e.target.value, 5)}
-                  className="bg-transparent outline-none text-right">
-                  {CURRENCIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                <select
+                  value={info.currency}
+                  onChange={(e) => updateInfo("currency", e.target.value, 5)}
+                  className="bg-transparent outline-none text-right"
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -350,22 +465,33 @@ export default function Invoice() {
         {/* Service Table */}
         <section className="relative z-10 mt-5 print:mt-3">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B]">Service Details</h3>
-            <button type="button" onClick={addRow}
-              className="print:hidden inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-[#0A66C2] text-white hover:bg-blue-700">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B]">
+              Service Details
+            </h3>
+            <button
+              type="button"
+              onClick={addRow}
+              className="print:hidden inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-[#0A66C2] text-white hover:bg-blue-700"
+            >
               <i className="fa-solid fa-plus" /> Add Row
             </button>
           </div>
-          {errors.rows && <p className="text-rose-600 text-[11px] mb-2">{errors.rows}</p>}
+          {errors.rows && (
+            <p className="text-rose-600 text-[11px] mb-2">{errors.rows}</p>
+          )}
 
           <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-[12px] border-collapse">
               <thead>
                 <tr className="bg-[#1B263B] text-white text-[11px]">
                   <th className="p-2 print:p-1 text-left w-[4%]">SL</th>
-                  <th className="p-2 print:p-1 text-left w-[30%]">Service / Description</th>
+                  <th className="p-2 print:p-1 text-left w-[30%]">
+                    Service / Description
+                  </th>
                   <th className="p-2 print:p-1 text-right w-[10%]">Qty</th>
-                  <th className="p-2 print:p-1 text-right w-[14%]">Unit Price</th>
+                  <th className="p-2 print:p-1 text-right w-[14%]">
+                    Unit Price
+                  </th>
                   <th className="p-2 print:p-1 text-right w-[12%]">Discount</th>
                   <th className="p-2 print:p-1 text-right w-[10%]">VAT %</th>
                   <th className="p-2 print:p-1 text-right w-[14%]">Total</th>
@@ -374,43 +500,82 @@ export default function Invoice() {
               </thead>
               <tbody>
                 {rows.map((row, idx) => (
-                  <tr key={row.id} className={idx % 2 === 0 ? "bg-white" : "bg-blue-50/40"}>
+                  <tr
+                    key={row.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-blue-50/40"}
+                  >
                     <td className="p-2 border-b border-slate-200">{idx + 1}</td>
                     <td className="p-2 border-b border-slate-200">
                       <input
                         value={row.description}
                         maxLength={250}
                         placeholder="e.g. Web application development – Phase 1"
-                        onChange={(e) => updateRow(row.id, "description", e.target.value)}
+                        onChange={(e) =>
+                          updateRow(row.id, "description", e.target.value)
+                        }
                         className="w-full bg-transparent outline-none focus:bg-white rounded px-1"
                       />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right">
-                      <input type="number" min="0" step="1" value={row.qty}
-                        onChange={(e) => updateRow(row.id, "qty", e.target.value)}
-                        className="w-full bg-transparent outline-none text-right px-1" />
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={row.qty}
+                        onChange={(e) =>
+                          updateRow(row.id, "qty", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none text-right px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right">
-                      <input type="number" min="0" step="0.01" value={row.unitPrice}
-                        onChange={(e) => updateRow(row.id, "unitPrice", e.target.value)}
-                        className="w-full bg-transparent outline-none text-right px-1" />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={row.unitPrice}
+                        onChange={(e) =>
+                          updateRow(row.id, "unitPrice", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none text-right px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right">
-                      <input type="number" min="0" step="0.01" value={row.discount}
-                        onChange={(e) => updateRow(row.id, "discount", e.target.value)}
-                        className="w-full bg-transparent outline-none text-right px-1" />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={row.discount}
+                        onChange={(e) =>
+                          updateRow(row.id, "discount", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none text-right px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right">
-                      <input type="number" min="0" max="100" step="0.01" value={row.vat}
-                        onChange={(e) => updateRow(row.id, "vat", e.target.value)}
-                        className="w-full bg-transparent outline-none text-right px-1" />
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.01"
+                        value={row.vat}
+                        onChange={(e) =>
+                          updateRow(row.id, "vat", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none text-right px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right font-semibold text-[#1B263B]">
                       {formatCurrency(rowTotal(row), info.currency)}
                     </td>
                     <td className="p-2 border-b border-slate-200 text-center print:hidden">
-                      <button type="button" onClick={() => removeRow(row.id)} disabled={rows.length === 1}
-                        className="text-rose-600 disabled:opacity-30" aria-label="Remove row">
+                      <button
+                        type="button"
+                        onClick={() => removeRow(row.id)}
+                        disabled={rows.length === 1}
+                        className="text-rose-600 disabled:opacity-30"
+                        aria-label="Remove row"
+                      >
                         <i className="fa-solid fa-trash" />
                       </button>
                     </td>
@@ -424,7 +589,9 @@ export default function Invoice() {
         {/* Notes + Summary */}
         <section className="relative z-10 grid grid-cols-2 gap-4 mt-5 print:mt-3">
           <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">Notes</h3>
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">
+              Notes
+            </h3>
             <textarea
               rows={4}
               maxLength={600}
@@ -435,69 +602,126 @@ export default function Invoice() {
           </div>
 
           <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">Summary</h3>
-            <SummaryLine label="Subtotal" value={formatCurrency(subtotal, info.currency)} />
-            <SummaryLine label="Discount" value={`- ${formatCurrency(totalDiscount, info.currency)}`} />
-            <SummaryLine label="VAT / Tax" value={formatCurrency(totalVat, info.currency)} />
-            <SummaryEditLine label="Additional Charges" value={additionalCharges}
-              onChange={(v) => setAdditionalCharges(clampNumber(v))} />
-            <SummaryEditLine label="Previous Due" value={previousDue}
-              onChange={(v) => setPreviousDue(clampNumber(v))} />
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">
+              Summary
+            </h3>
+            <SummaryLine
+              label="Subtotal"
+              value={formatCurrency(subtotal, info.currency)}
+            />
+            <SummaryLine
+              label="Discount"
+              value={`- ${formatCurrency(totalDiscount, info.currency)}`}
+            />
+            <SummaryLine
+              label="VAT / Tax"
+              value={formatCurrency(totalVat, info.currency)}
+            />
+            <SummaryEditLine
+              label="Additional Charges"
+              value={additionalCharges}
+              onChange={(v) => setAdditionalCharges(clampNumber(v))}
+            />
+            <SummaryEditLine
+              label="Previous Due"
+              value={previousDue}
+              onChange={(v) => setPreviousDue(clampNumber(v))}
+            />
             <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
               <span className="text-sm font-bold">Grand Total</span>
-              <span className="text-base font-extrabold">{formatCurrency(grandTotal, info.currency)}</span>
+              <span className="text-base font-extrabold">
+                {formatCurrency(grandTotal, info.currency)}
+              </span>
             </div>
-            <SummaryEditLine label="Paid Amount" value={paidAmount}
-              onChange={(v) => setPaidAmount(clampNumber(v))} />
+            <SummaryEditLine
+              label="Paid Amount"
+              value={paidAmount}
+              onChange={(v) => setPaidAmount(clampNumber(v))}
+            />
             <div className="flex justify-between items-center pt-2 border-t border-slate-200 mt-1">
-              <span className="text-sm font-bold text-rose-600">Amount Due</span>
-              <span className="text-sm font-extrabold text-rose-600">{formatCurrency(amountDue, info.currency)}</span>
+              <span className="text-sm font-bold text-rose-600">
+                Amount Due
+              </span>
+              <span className="text-sm font-extrabold text-rose-600">
+                {formatCurrency(amountDue, info.currency)}
+              </span>
             </div>
-            <p className="text-[11.5px] font-semibold text-[#1B263B] mt-3">{amountInWords}</p>
+            <p className="text-[11.5px] font-semibold text-[#1B263B] mt-3">
+              {amountInWords}
+            </p>
           </div>
         </section>
 
         {/* Bank / Payment Info */}
         <section className="relative z-10 mt-5 print:mt-3 rounded-xl bg-slate-50 border border-slate-200 p-4 print:p-2.5">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">Bank / Payment Information</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B] mb-2">
+            Bank / Payment Information
+          </h3>
           <div className="grid grid-cols-3 gap-x-4 gap-y-2 text-[12px]">
-            <LabeledInput label="Bank Name" value={bank.bankName} onChange={(v) => updateBank("bankName", v)} />
-            <LabeledInput label="Account Name" value={bank.accountName} onChange={(v) => updateBank("accountName", v)} />
-            <LabeledInput label="Account Number" value={bank.accountNumber} onChange={(v) => updateBank("accountNumber", v, 40)} />
-            <LabeledInput label="Branch" value={bank.branch} onChange={(v) => updateBank("branch", v)} />
-            <LabeledInput label="Bkash" value={bank.bkash} onChange={(v) => updateBank("bkash", v, 20)} />
-            <LabeledInput label="Nagad" value={bank.nagad} onChange={(v) => updateBank("nagad", v, 20)} />
+            <LabeledInput
+              label="Bank Name"
+              value={bank.bankName}
+              onChange={(v) => updateBank("bankName", v)}
+            />
+            <LabeledInput
+              label="Account Name"
+              value={bank.accountName}
+              onChange={(v) => updateBank("accountName", v)}
+            />
+            <LabeledInput
+              label="Account Number"
+              value={bank.accountNumber}
+              onChange={(v) => updateBank("accountNumber", v, 40)}
+            />
+            <LabeledInput
+              label="Branch"
+              value={bank.branch}
+              onChange={(v) => updateBank("branch", v)}
+            />
+            <LabeledInput
+              label="Bkash"
+              value={bank.bkash}
+              onChange={(v) => updateBank("bkash", v, 20)}
+            />
+            <LabeledInput
+              label="Nagad"
+              value={bank.nagad}
+              onChange={(v) => updateBank("nagad", v, 20)}
+            />
           </div>
         </section>
 
         {/* Authorized By only */}
         <section className="relative z-10 mt-5 print:mt-3">
-          <div className="border-t border-slate-300 pt-2 space-y-1.5 text-right max-w-xs ml-auto">
-            <p className="text-[11px] font-bold uppercase text-[#1B263B]">Authorized By</p>
-            <p className="text-[12px] font-semibold text-slate-700">Managing Director</p>
+          <div className="pt-2 flex flex-col items-end max-w-xs ml-auto">
+            <p className="text-[11px] font-bold uppercase text-[#1B263B]">
+              Authorized By
+            </p>
+
+            <p className="text-[12px] font-semibold text-slate-700">
+              Managing Director
+            </p>
+
             <p className="text-[11px] text-slate-500">{COMPANY.name}</p>
-            <div className="h-7 border-b border-slate-400 text-[10px] text-slate-400 text-right">Signature &amp; Company Seal</div>
-            <input type="date" value={signatures.authorizedByDate}
-              onChange={(e) => updateSignature("authorizedByDate", e.target.value, 20)}
-              className="text-[11px] outline-none bg-transparent text-right w-full" />
+
+            {/* Signature */}
+            <img
+              src={signatureImg}
+              alt="Authorized Signature"
+              className="h-8 object-contain mt-2 border-b border-slate-300 print:h-9 print:mt-1.5 print:border-b print:border-slate-300"
+            />
+
+            {/* Date */}
+            <input
+              type="date"
+              value={signatures.authorizedByDate}
+              onChange={(e) =>
+                updateSignature("authorizedByDate", e.target.value, 20)
+              }
+              className="mt-0 text-[12px] bg-transparent outline-none text-right print:text-right print:w-[120px]"
+            />
           </div>
         </section>
-
-        {/* Security strip */}
-        <section className="relative z-10 flex items-center gap-6 mt-5 print:mt-3 pt-3 border-t border-dashed border-slate-300">
-          <div ref={qrRef} className="w-[76px] h-[76px]" />
-          <svg ref={barcodeRef} className="max-w-[190px]" />
-          <div className="ml-auto text-[10px] text-slate-500 text-right">
-            <p>Invoice No: {info.invoiceNo}</p>
-            <p>Generated: {generatedAt}</p>
-          </div>
-        </section>
-
-        {/* Footer — always the last block in the flow, so it naturally lands at the end of the last page */}
-        <footer className="relative z-10 text-center text-[10px] text-slate-500 mt-5 print:mt-3 pt-3 border-t-4 border-[#0A66C2] leading-relaxed">
-          <p>Copyright © {new Date().getFullYear()} {COMPANY.name} · {COMPANY.website} · {COMPANY.email} · {COMPANY.phone}</p>
-          <p className="font-semibold text-[#1B263B] mt-1">Thank you for your business.</p>
-        </footer>
       </div>
     </div>
   );

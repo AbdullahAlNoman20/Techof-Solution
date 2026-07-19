@@ -24,13 +24,35 @@ const COMPANY = {
 };
 
 const EXPENSE_CATEGORIES = [
-  "Office Rent", "Electricity Bill", "Internet Bill", "Software Subscription",
-  "Domain & Hosting", "Cloud Service", "Office Equipment", "Furniture",
-  "Marketing", "Transportation", "Fuel", "Printing", "Stationery", "Salary",
-  "Entertainment", "Repair & Maintenance", "Training", "Miscellaneous",
+  "Office Rent",
+  "Electricity Bill",
+  "Internet Bill",
+  "Software Subscription",
+  "Domain & Hosting",
+  "Cloud Service",
+  "Office Equipment",
+  "Furniture",
+  "Marketing",
+  "Transportation",
+  "Fuel",
+  "Printing",
+  "Stationery",
+  "Salary",
+  "Entertainment",
+  "Repair & Maintenance",
+  "Training",
+  "Miscellaneous",
 ];
 
-const PAYMENT_METHODS = ["Cash", "Bank", "Bkash", "Nagad", "Rocket", "Cheque", "Online Transfer"];
+const PAYMENT_METHODS = [
+  "Cash",
+  "Bank",
+  "Bkash",
+  "Nagad",
+  "Rocket",
+  "Cheque",
+  "Online Transfer",
+];
 
 const DOC_CHECKS = [
   { key: "invoice", label: "Invoice Attached" },
@@ -70,11 +92,13 @@ export default function Voucher() {
   const [adjustment, setAdjustment] = useState(0);
   const [notes, setNotes] = useState("");
   const [docs, setDocs] = useState(
-    DOC_CHECKS.reduce((acc, d) => ({ ...acc, [d.key]: false }), {})
+    DOC_CHECKS.reduce((acc, d) => ({ ...acc, [d.key]: false }), {}),
   );
   const [signatures, setSignatures] = useState({
-    verifiedByName: "Accounts Officer", verifiedByDate: "",
-    approvedByName: "Managing Director", approvedByDate: "",
+    verifiedByName: "Accounts Officer",
+    verifiedByDate: "",
+    approvedByName: "Managing Director",
+    approvedByDate: "",
   });
   const [errors, setErrors] = useState({});
 
@@ -83,48 +107,73 @@ export default function Voucher() {
 
   const subtotal = useMemo(
     () => rows.reduce((sum, r) => sum + clampNumber(r.amount), 0),
-    [rows]
+    [rows],
   );
-  const vatAmount = useMemo(() => (subtotal * clampNumber(vatPercent, 0, 100)) / 100, [subtotal, vatPercent]);
-  const taxAmount = useMemo(() => (subtotal * clampNumber(taxPercent, 0, 100)) / 100, [subtotal, taxPercent]);
+  const vatAmount = useMemo(
+    () => (subtotal * clampNumber(vatPercent, 0, 100)) / 100,
+    [subtotal, vatPercent],
+  );
+  const taxAmount = useMemo(
+    () => (subtotal * clampNumber(taxPercent, 0, 100)) / 100,
+    [subtotal, taxPercent],
+  );
   const grandTotal = useMemo(() => {
-    const total = subtotal + vatAmount + taxAmount - clampNumber(discount) + Number(adjustment || 0);
+    const total =
+      subtotal +
+      vatAmount +
+      taxAmount -
+      clampNumber(discount) +
+      Number(adjustment || 0);
     return total > 0 ? total : 0;
   }, [subtotal, vatAmount, taxAmount, discount, adjustment]);
 
-  const amountInWords = useMemo(() => numberToWordsBDT(grandTotal), [grandTotal]);
+  const amountInWords = useMemo(
+    () => numberToWordsBDT(grandTotal),
+    [grandTotal],
+  );
 
   const updateRow = useCallback((id, field, value) => {
     setRows((prev) =>
       prev.map((r) => {
         if (r.id !== id) return r;
-        if (field === "description") return { ...r, description: sanitizeText(value, 200) };
-        if (field === "category") return { ...r, category: sanitizeText(value, 100) };
+        if (field === "description")
+          return { ...r, description: sanitizeText(value, 200) };
+        if (field === "category")
+          return { ...r, category: sanitizeText(value, 100) };
         if (field === "unit") return { ...r, unit: sanitizeText(value, 30) };
-        if (field === "quantity") return { ...r, quantity: clampNumber(value, 0, 100000) };
-        if (field === "amount") return { ...r, amount: clampNumber(value, 0, 99999999) };
+        if (field === "quantity")
+          return { ...r, quantity: clampNumber(value, 0, 100000) };
+        if (field === "amount")
+          return { ...r, amount: clampNumber(value, 0, 99999999) };
         return r;
-      })
+      }),
     );
   }, []);
 
   const addRow = () => setRows((prev) => [...prev, emptyRow()]);
   const removeRow = (id) =>
-    setRows((prev) => (prev.length > 1 ? prev.filter((r) => r.id !== id) : prev));
+    setRows((prev) =>
+      prev.length > 1 ? prev.filter((r) => r.id !== id) : prev,
+    );
 
   const updateHeader = (field, value, maxLen = 100) =>
     setHeader((prev) => ({ ...prev, [field]: sanitizeText(value, maxLen) }));
 
   const updateSignature = (field, value, maxLen = 100) =>
-    setSignatures((prev) => ({ ...prev, [field]: sanitizeText(value, maxLen) }));
+    setSignatures((prev) => ({
+      ...prev,
+      [field]: sanitizeText(value, maxLen),
+    }));
 
-  const toggleDoc = (key) => setDocs((prev) => ({ ...prev, [key]: !prev[key] }));
+  const toggleDoc = (key) =>
+    setDocs((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const validate = () => {
     const errs = {};
     if (!header.voucherDate) errs.voucherDate = "Required";
     if (!header.expenseDate) errs.expenseDate = "Required";
-    if (rows.every((r) => !r.description.trim())) errs.rows = "Add at least one expense line";
+    if (rows.every((r) => !r.description.trim()))
+      errs.rows = "Add at least one expense line";
     if (rows.some((r) => clampNumber(r.amount) <= 0 && r.description.trim()))
       errs.amounts = "Every filled row needs an amount greater than 0";
     setErrors(errs);
@@ -147,7 +196,9 @@ export default function Voucher() {
           height: 76,
           correctLevel: window.QRCode.CorrectLevel.M,
         });
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
   }, [header.voucherNo, header.voucherDate, grandTotal]);
 
@@ -162,7 +213,9 @@ export default function Voucher() {
           margin: 4,
           displayValue: true,
         });
-      } catch { /* non-critical */ }
+      } catch {
+        /* non-critical */
+      }
     }
   }, [header.voucherNo]);
 
@@ -170,17 +223,14 @@ export default function Voucher() {
 
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center gap-4 print:block print:bg-white print:p-0 print:min-h-0">
-      {/*
-        Print rules:
-        - No absolute positioning / inset:0 (that pins bottom to the first page and
-          combined with overflow-hidden clips every page after the first one).
-        - The print area stays in normal document flow (position: static, overflow: visible)
-          so the browser can paginate it across as many A4 pages as needed.
-        - break-inside: avoid on each section/header/footer stops a section splitting
-          mid-way; if it doesn't fit the remaining space it drops whole to the next page.
-      */}
       <style>{`
         @media print {
+        .print-footer{
+        position:fixed;
+        bottom:0;
+        left:0;
+        right:0;
+    }
           @page { size: A4; margin: 10mm; }
           html, body { height: auto !important; }
           body * { visibility: hidden !important; }
@@ -233,7 +283,25 @@ export default function Voucher() {
       {/* Voucher sheet — this is exactly what gets printed */}
       <div
         id="voucher-print-area"
-        className="relative w-full max-w-[820px] bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none p-8 print:p-0"
+        className="
+        relative
+        w-full
+        max-w-[820px]
+        bg-white
+        rounded-2xl
+        shadow-lg
+        p-8
+        print:p-0
+        print:shadow-none
+        print:rounded-none
+
+        flex
+        flex-col
+
+        print:flex
+        print:flex-col
+        print:min-h-[calc(297mm-20mm)]
+    "
       >
         {/* Watermark */}
         <img
@@ -254,21 +322,41 @@ export default function Voucher() {
               className="w-14 h-14 object-contain"
             />
             <div>
-              <h1 className="text-lg font-bold text-[#0a2540]">{COMPANY.name}</h1>
-              <p className="text-[11px] italic text-[#1d4ed8]">{COMPANY.tagline}</p>
+              <h1 className="text-lg font-bold text-[#0a2540]">
+                {COMPANY.name}
+              </h1>
+              <p className="text-[11px] italic text-[#1d4ed8]">
+                {COMPANY.tagline}
+              </p>
             </div>
           </div>
 
           <div className="text-center">
-            <h2 className="text-xl font-extrabold tracking-wide text-[#0a2540]">EXPENSE VOUCHER</h2>
-            <p className="text-[11px] text-slate-500">Internal Company Expense Record</p>
+            <h2 className="text-xl font-extrabold tracking-wide text-[#0a2540]">
+              EXPENSE VOUCHER
+            </h2>
+            <p className="text-[11px] text-slate-500">
+              Internal Company Expense Record
+            </p>
           </div>
 
           <div className="text-right text-[10.5px] text-slate-600 leading-relaxed">
-            <p><i className="fa-solid fa-location-dot w-3 text-[#1d4ed8] mr-1" />{COMPANY.address}</p>
-            <p><i className="fa-solid fa-phone w-3 text-[#1d4ed8] mr-1" />{COMPANY.phone}</p>
-            <p><i className="fa-solid fa-envelope w-3 text-[#1d4ed8] mr-1" />{COMPANY.email}</p>
-            <p><i className="fa-solid fa-globe w-3 text-[#1d4ed8] mr-1" />{COMPANY.website}</p>
+            <p>
+              <i className="fa-solid fa-location-dot w-3 text-[#1d4ed8] mr-1" />
+              {COMPANY.address}
+            </p>
+            <p>
+              <i className="fa-solid fa-phone w-3 text-[#1d4ed8] mr-1" />
+              {COMPANY.phone}
+            </p>
+            <p>
+              <i className="fa-solid fa-envelope w-3 text-[#1d4ed8] mr-1" />
+              {COMPANY.email}
+            </p>
+            <p>
+              <i className="fa-solid fa-globe w-3 text-[#1d4ed8] mr-1" />
+              {COMPANY.website}
+            </p>
             <p>Trade License: {COMPANY.tradeLicense}</p>
           </div>
         </header>
@@ -276,30 +364,61 @@ export default function Voucher() {
         {/* Voucher Info */}
         <section className="relative z-10 grid grid-cols-3 gap-x-4 gap-y-2 mt-4 print:mt-2 rounded-xl bg-slate-50 border border-slate-200 p-4 print:p-2.5 text-[12px]">
           <Field label="Voucher No.">
-            <input value={header.voucherNo} readOnly className="w-full bg-transparent font-semibold text-[#0a2540] outline-none" />
+            <input
+              value={header.voucherNo}
+              readOnly
+              className="w-full bg-transparent font-semibold text-[#0a2540] outline-none"
+            />
           </Field>
           <Field label="Voucher Date" error={errors.voucherDate}>
-            <input type="date" value={header.voucherDate} onChange={(e) => updateHeader("voucherDate", e.target.value, 20)}
-              className="w-full bg-transparent outline-none" />
+            <input
+              type="date"
+              value={header.voucherDate}
+              onChange={(e) => updateHeader("voucherDate", e.target.value, 20)}
+              className="w-full bg-transparent outline-none"
+            />
           </Field>
           <Field label="Expense Date" error={errors.expenseDate}>
-            <input type="date" value={header.expenseDate} onChange={(e) => updateHeader("expenseDate", e.target.value, 20)}
-              className="w-full bg-transparent outline-none" />
+            <input
+              type="date"
+              value={header.expenseDate}
+              onChange={(e) => updateHeader("expenseDate", e.target.value, 20)}
+              className="w-full bg-transparent outline-none"
+            />
           </Field>
           <Field label="Financial Year">
-            <input value={header.financialYear} onChange={(e) => updateHeader("financialYear", e.target.value, 20)}
-              className="w-full bg-transparent outline-none" />
+            <input
+              value={header.financialYear}
+              onChange={(e) =>
+                updateHeader("financialYear", e.target.value, 20)
+              }
+              className="w-full bg-transparent outline-none"
+            />
           </Field>
           <Field label="Expense Category">
-            <select value={header.expenseCategory} onChange={(e) => updateHeader("expenseCategory", e.target.value)}
-              className="w-full bg-transparent outline-none">
-              {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            <select
+              value={header.expenseCategory}
+              onChange={(e) => updateHeader("expenseCategory", e.target.value)}
+              className="w-full bg-transparent outline-none"
+            >
+              {EXPENSE_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
             </select>
           </Field>
           <Field label="Payment Method">
-            <select value={header.paymentMethod} onChange={(e) => updateHeader("paymentMethod", e.target.value)}
-              className="w-full bg-transparent outline-none">
-              {PAYMENT_METHODS.map((p) => <option key={p} value={p}>{p}</option>)}
+            <select
+              value={header.paymentMethod}
+              onChange={(e) => updateHeader("paymentMethod", e.target.value)}
+              className="w-full bg-transparent outline-none"
+            >
+              {PAYMENT_METHODS.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
             </select>
           </Field>
         </section>
@@ -307,62 +426,116 @@ export default function Voucher() {
         {/* Expense Table */}
         <section className="relative z-10 mt-5 print:mt-3">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540]">Expense Details</h3>
-            <button type="button" onClick={addRow}
-              className="print:hidden inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-[#1d4ed8] text-white hover:bg-blue-700">
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540]">
+              Expense Details
+            </h3>
+            <button
+              type="button"
+              onClick={addRow}
+              className="print:hidden inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md bg-[#1d4ed8] text-white hover:bg-blue-700"
+            >
               <i className="fa-solid fa-plus" /> Add Row
             </button>
           </div>
-          {errors.rows && <p className="text-rose-600 text-[11px] mb-2">{errors.rows}</p>}
-          {errors.amounts && <p className="text-rose-600 text-[11px] mb-2">{errors.amounts}</p>}
+          {errors.rows && (
+           <p className="text-rose-600 text-[11px] mb-2 print:hidden">{errors.rows}</p>
+          )}
+          {errors.amounts && (
+            <p className="text-rose-600 text-[11px] mb-2 print:hidden">{errors.amounts}</p>
+          )}
 
           <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-[12px] border-collapse">
               <thead>
                 <tr className="bg-[#0a2540] text-white text-[11px]">
                   <th className="p-2 print:p-1 text-left w-[4%]">SL</th>
-                  <th className="p-2 print:p-1 text-left w-[34%]">Expense Description</th>
+                  <th className="p-2 print:p-1 text-left w-[34%]">
+                    Expense Description
+                  </th>
                   <th className="p-2 print:p-1 text-left w-[20%]">Category</th>
                   <th className="p-2 print:p-1 text-right w-[10%]">Quantity</th>
                   <th className="p-2 print:p-1 text-left w-[12%]">Unit</th>
-                  <th className="p-2 print:p-1 text-right w-[14%]">Amount (BDT)</th>
+                  <th className="p-2 print:p-1 text-right w-[14%]">
+                    Amount (BDT)
+                  </th>
                   <th className="p-2 w-[6%] print:hidden"></th>
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row, idx) => (
-                  <tr key={row.id} className={idx % 2 === 0 ? "bg-white" : "bg-blue-50/40"}>
+                  <tr
+                    key={row.id}
+                    className={idx % 2 === 0 ? "bg-white" : "bg-blue-50/40"}
+                  >
                     <td className="p-2 border-b border-slate-200">{idx + 1}</td>
                     <td className="p-2 border-b border-slate-200">
-                      <input value={row.description} maxLength={200}
+                      <input
+                        value={row.description}
+                        maxLength={200}
                         placeholder="e.g. Office internet bill – July"
-                        onChange={(e) => updateRow(row.id, "description", e.target.value)}
-                        className="w-full bg-transparent outline-none focus:bg-white rounded px-1" />
+                        onChange={(e) =>
+                          updateRow(row.id, "description", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none focus:bg-white rounded px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200">
-                      <select value={row.category} onChange={(e) => updateRow(row.id, "category", e.target.value)}
-                        className="w-full bg-transparent outline-none">
-                        {EXPENSE_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                      <select
+                        value={row.category}
+                        onChange={(e) =>
+                          updateRow(row.id, "category", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none"
+                      >
+                        {EXPENSE_CATEGORIES.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
                       </select>
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right">
-                      <input type="number" min="0" step="1" value={row.quantity}
-                        onChange={(e) => updateRow(row.id, "quantity", e.target.value)}
-                        className="w-full bg-transparent outline-none text-right px-1" />
+                      <input
+                        type="number"
+                        min="0"
+                        step="1"
+                        value={row.quantity}
+                        onChange={(e) =>
+                          updateRow(row.id, "quantity", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none text-right px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200">
-                      <input value={row.unit} maxLength={30}
-                        onChange={(e) => updateRow(row.id, "unit", e.target.value)}
-                        className="w-full bg-transparent outline-none px-1" />
+                      <input
+                        value={row.unit}
+                        maxLength={30}
+                        onChange={(e) =>
+                          updateRow(row.id, "unit", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right font-semibold text-[#0a2540]">
-                      <input type="number" min="0" step="0.01" value={row.amount}
-                        onChange={(e) => updateRow(row.id, "amount", e.target.value)}
-                        className="w-full bg-transparent outline-none text-right px-1" />
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={row.amount}
+                        onChange={(e) =>
+                          updateRow(row.id, "amount", e.target.value)
+                        }
+                        className="w-full bg-transparent outline-none text-right px-1"
+                      />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-center print:hidden">
-                      <button type="button" onClick={() => removeRow(row.id)} disabled={rows.length === 1}
-                        className="text-rose-600 disabled:opacity-30" aria-label="Remove row">
+                      <button
+                        type="button"
+                        onClick={() => removeRow(row.id)}
+                        disabled={rows.length === 1}
+                        className="text-rose-600 disabled:opacity-30"
+                        aria-label="Remove row"
+                      >
                         <i className="fa-solid fa-trash" />
                       </button>
                     </td>
@@ -375,44 +548,93 @@ export default function Voucher() {
 
         {/* Purpose & Remarks (merged) + Summary */}
         <section className="relative z-10 grid grid-cols-2 gap-4 mt-5 print:mt-3">
-          <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">Purpose &amp; Remarks</h3>
-            <textarea
-              rows={4}
-              maxLength={700}
-              value={notes}
-              placeholder="e.g. Purchase of office networking equipment for development department. Any additional remarks can be added here."
-              onChange={(e) => setNotes(sanitizeText(e.target.value, 700))}
-              className="w-full text-[12px] text-slate-700 outline-none resize-none bg-slate-50 rounded-lg p-2 leading-relaxed"
-            />
+          <div className="rounded-lg border border-slate-200 p-3">
+            <div className="mt-2 text-[10.5px] text-slate-500 leading-relaxed">
+              <strong>Important Note:</strong> This voucher is prepared solely
+              for internal accounting purposes. Every expense must be supported
+              by authentic bills, invoices or approvals and remains subject to
+              company financial policy and audit verification.
+            </div>
+            <p className="text-[11px] mt-5 font-semibold text-[#0a2540]">NB:</p>
+
+            <p className="text-[11px] italic text-slate-700 text-right">
+              وَلَا تَأْكُلُوا أَمْوَالَكُم بَيْنَكُم بِالْبَاطِلِ
+            </p>
+
+            <p className="text-[11px] text-slate-600">
+              "তোমরা একে অপরের সম্পদ অন্যায়ভাবে ভোগ করো না।"
+              <br />
+              <span className="font-medium mt-5">সূরা আল-বাকারা : ১৮৮</span>
+            </p>
           </div>
 
           <div className="rounded-xl border border-slate-200 p-4 print:p-2.5">
-            <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">Expense Summary</h3>
-            <SummaryLine label="Subtotal" value={`৳ ${formatCurrency(subtotal)}`} />
-            <SummaryEditLine label="VAT (%)" value={vatPercent} onChange={(v) => setVatPercent(clampNumber(v, 0, 100))} />
-            <SummaryLine label="VAT Amount" value={`৳ ${formatCurrency(vatAmount)}`} />
-            <SummaryEditLine label="Tax (%)" value={taxPercent} onChange={(v) => setTaxPercent(clampNumber(v, 0, 100))} />
-            <SummaryLine label="Tax Amount" value={`৳ ${formatCurrency(taxAmount)}`} />
-            <SummaryEditLine label="Discount" value={discount} onChange={(v) => setDiscount(clampNumber(v))} />
-            <SummaryEditLine label="Adjustment (+/-)" value={adjustment}
-              onChange={(v) => setAdjustment(clampNumber(v, -999999999, 999999999))} />
+            <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">
+              Expense Summary
+            </h3>
+            <SummaryLine
+              label="Subtotal"
+              value={`৳ ${formatCurrency(subtotal)}`}
+            />
+            <SummaryEditLine
+              label="VAT (%)"
+              value={vatPercent}
+              onChange={(v) => setVatPercent(clampNumber(v, 0, 100))}
+            />
+            <SummaryLine
+              label="VAT Amount"
+              value={`৳ ${formatCurrency(vatAmount)}`}
+            />
+            <SummaryEditLine
+              label="Tax (%)"
+              value={taxPercent}
+              onChange={(v) => setTaxPercent(clampNumber(v, 0, 100))}
+            />
+            <SummaryLine
+              label="Tax Amount"
+              value={`৳ ${formatCurrency(taxAmount)}`}
+            />
+            <SummaryEditLine
+              label="Discount"
+              value={discount}
+              onChange={(v) => setDiscount(clampNumber(v))}
+            />
+            <SummaryEditLine
+              label="Adjustment (+/-)"
+              value={adjustment}
+              onChange={(v) =>
+                setAdjustment(clampNumber(v, -999999999, 999999999))
+              }
+            />
             <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#1d4ed8] to-[#0a2540] text-white px-3">
               <span className="text-sm font-bold">Grand Total</span>
-              <span className="text-base font-extrabold">৳ {formatCurrency(grandTotal)}</span>
+              <span className="text-base font-extrabold">
+                ৳ {formatCurrency(grandTotal)}
+              </span>
             </div>
-            <p className="text-[11.5px] font-semibold text-[#0a2540] mt-3">{amountInWords}</p>
+            <p className="text-[11.5px] font-semibold text-[#0a2540] mt-3">
+              {amountInWords}
+            </p>
           </div>
         </section>
 
         {/* Supporting Documents */}
         <section className="relative z-10 mt-5 print:mt-3 rounded-xl border border-slate-200 p-4 print:p-2.5">
-          <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">Supporting Documents</h3>
+          <h3 className="text-xs font-bold uppercase tracking-wide text-[#0a2540] mb-2">
+            Supporting Documents
+          </h3>
           <div className="grid grid-cols-3 gap-2 text-[12px]">
             {DOC_CHECKS.map((d) => (
-              <label key={d.key} className="flex items-center gap-2 text-slate-700">
-                <input type="checkbox" checked={docs[d.key]} onChange={() => toggleDoc(d.key)}
-                  className="accent-[#1d4ed8] w-3.5 h-3.5" />
+              <label
+                key={d.key}
+                className="flex items-center gap-2 text-slate-700"
+              >
+                <input
+                  type="checkbox"
+                  checked={docs[d.key]}
+                  onChange={() => toggleDoc(d.key)}
+                  className="accent-[#1d4ed8] w-3.5 h-3.5"
+                />
                 {d.label}
               </label>
             ))}
@@ -421,31 +643,57 @@ export default function Voucher() {
 
         {/* Approval — Verified & Approved only */}
         <section className="relative z-10 grid grid-cols-2 gap-6 mt-5 print:mt-3">
-          <div className="border-t border-slate-300 pt-2 space-y-1.5">
-            <p className="text-[11px] font-bold uppercase text-[#0a2540]">Verified By</p>
-            <input value={signatures.verifiedByName}
-              onChange={(e) => updateSignature("verifiedByName", e.target.value, 80)}
-              className="w-full text-[11.5px] border-b border-slate-200 outline-none py-0.5 bg-transparent" />
-            <div className="h-7 border-b border-slate-400 text-[10px] text-slate-400">Signature</div>
-            <input type="date" value={signatures.verifiedByDate}
-              onChange={(e) => updateSignature("verifiedByDate", e.target.value, 20)}
-              className="text-[11px] outline-none bg-transparent" />
+          <div className="pt-2 space-y-1.5">
+            <p className="text-[11px] font-bold uppercase text-[#0a2540]">
+              Verified By
+            </p>
+            <input
+              value={signatures.verifiedByName}
+              onChange={(e) =>
+                updateSignature("verifiedByName", e.target.value, 80)
+              }
+              className="w-full text-[11.5px] border-b border-slate-200 outline-none py-0.5 bg-transparent"
+            />
+            <div className="h-7 border-b border-slate-400 text-[10px] text-slate-400">
+              Signature
+            </div>
+            <input
+              type="date"
+              value={signatures.verifiedByDate}
+              onChange={(e) =>
+                updateSignature("verifiedByDate", e.target.value, 20)
+              }
+              className="text-[11px] outline-none bg-transparent"
+            />
           </div>
 
-          <div className="border-t border-slate-300 pt-2 space-y-1.5 text-right">
-            <p className="text-[11px] font-bold uppercase text-[#0a2540]">Approved By</p>
-            <input value={signatures.approvedByName}
-              onChange={(e) => updateSignature("approvedByName", e.target.value, 80)}
-              className="w-full text-[11.5px] border-b border-slate-200 outline-none py-0.5 bg-transparent text-right" />
-            <div className="h-7 border-b border-slate-400 text-[10px] text-slate-400 text-right">Signature &amp; Company Seal</div>
-            <input type="date" value={signatures.approvedByDate}
-              onChange={(e) => updateSignature("approvedByDate", e.target.value, 20)}
-              className="text-[11px] outline-none bg-transparent text-right w-full" />
+          <div className="pt-2 space-y-1.5 text-right">
+            <p className="text-[11px] font-bold uppercase text-[#0a2540]">
+              Approved By
+            </p>
+            <input
+              value={signatures.approvedByName}
+              onChange={(e) =>
+                updateSignature("approvedByName", e.target.value, 80)
+              }
+              className="w-full text-[11.5px] border-b border-slate-200 outline-none py-0.5 bg-transparent text-right"
+            />
+            <div className="h-7 border-b border-slate-400 text-[10px] text-slate-400 text-right">
+              Signature &amp; Company Seal
+            </div>
+            <input
+              type="date"
+              value={signatures.approvedByDate}
+              onChange={(e) =>
+                updateSignature("approvedByDate", e.target.value, 20)
+              }
+              className="text-[11px] outline-none bg-transparent text-right w-full"
+            />
           </div>
         </section>
 
         {/* Security strip */}
-        <section className="relative z-10 flex items-center gap-6 mt-5 print:mt-3 pt-3 border-t border-dashed border-slate-300">
+        <section className="relative z-10 flex items-center gap-6 mt-auto pt-3 border-t border-dashed border-slate-300">
           <div ref={qrRef} className="w-[76px] h-[76px]" />
           <svg ref={barcodeRef} className="max-w-[190px]" />
           <div className="ml-auto text-[10px] text-slate-500 text-right">
@@ -455,11 +703,32 @@ export default function Voucher() {
         </section>
 
         {/* Footer — always the last block in the flow, so it naturally lands at the end of the last page */}
-        <footer className="relative z-10 text-center text-[10px] text-slate-500 mt-5 print:mt-3 pt-3 border-t-4 border-[#1d4ed8] leading-relaxed">
-          <p>This voucher is an official internal financial record of {COMPANY.name}.</p>
-          <p>All expenses are subject to company accounting policy and audit verification.</p>
-          <p>Generated by TechOf Solution ERP · Copyright © {new Date().getFullYear()} {COMPANY.name}</p>
-        </footer>
+        {/* <footer
+          className="
+    relative z-10
+    text-center text-[10px]
+    text-slate-500
+    mt-auto
+    pt-3
+    border-t-4
+    border-[#1d4ed8]
+    leading-relaxed
+    print:mt-auto
+  "
+        >
+          <p>
+            This voucher is an official internal financial record of{" "}
+            {COMPANY.name}.
+          </p>
+          <p>
+            All expenses are subject to company accounting policy and audit
+            verification.
+          </p>
+          <p>
+            Generated by TechOf Solution ERP · Copyright ©{" "}
+            {new Date().getFullYear()} {COMPANY.name}
+          </p>
+        </footer> */}
       </div>
     </div>
   );
