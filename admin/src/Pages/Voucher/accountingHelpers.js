@@ -1,14 +1,17 @@
-// FILE: admin/src/Pages/Voucher/accountingHelpers.js  (NEW)
 import { VOUCHER_TYPE_CONFIG, VOUCHER_NUMBER_STORAGE_KEY } from "./accountingConstants";
+import chartOfAccounts from "../../assets/data/chartOfAccounts.json";
 
 let cachedChartOfAccounts = null;
 
 export async function loadChartOfAccounts() {
-  if (cachedChartOfAccounts) return cachedChartOfAccounts;
-  const res = await fetch("/JSON/chartOfAccounts.json");
-  if (!res.ok) throw new Error("Failed to load chart of accounts.");
-  const data = await res.json();
-  cachedChartOfAccounts = Array.isArray(data) ? data : [];
+  if (cachedChartOfAccounts) {
+    return cachedChartOfAccounts;
+  }
+
+  cachedChartOfAccounts = Array.isArray(chartOfAccounts)
+    ? chartOfAccounts
+    : [];
+
   return cachedChartOfAccounts;
 }
 

@@ -1,3 +1,4 @@
+import chartOfAccounts from "../../assets/data/chartOfAccounts.json";
 
 const ONES = [
   "", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine",
@@ -128,15 +129,7 @@ export function sortGroupedAccounts(groups = {}) {
 
 
 export async function loadChartOfAccounts() {
-  const response = await fetch("/public/JSON/chartOfAccounts.json");
-
-  if (!response.ok) {
-    throw new Error("Failed to load Chart of Accounts");
-  }
-
-  const data = await response.json();
-
-  return Array.isArray(data) ? data : [];
+  return Array.isArray(chartOfAccounts) ? chartOfAccounts : [];
 }
 
 
