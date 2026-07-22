@@ -1,5 +1,8 @@
 import techofLogo from "../../assets/Techof Logo 2.jpeg";
 
+import QRCode from "qrcode";
+import JsBarcode from "jsbarcode";
+
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -186,38 +189,39 @@ export default function Voucher() {
   };
 
   useEffect(() => {
-    if (qrRef.current && window.QRCode) {
-      qrRef.current.innerHTML = "";
-      try {
-        // eslint-disable-next-line no-new
-        new window.QRCode(qrRef.current, {
-          text: `${header.voucherNo}|${header.voucherDate}|BDT ${grandTotal.toFixed(2)}`,
-          width: 76,
-          height: 76,
-          correctLevel: window.QRCode.CorrectLevel.M,
-        });
-      } catch {
-        /* non-critical */
-      }
+  if (qrRef.current && window.QRCode) {
+    qrRef.current.innerHTML = "";
+
+    try {
+      // eslint-disable-next-line no-new
+      new window.QRCode(qrRef.current, {
+        text: `${header.voucherNo}|${header.voucherDate}|BDT ${grandTotal.toFixed(2)}`,
+        width: 76,
+        height: 76,
+        correctLevel: window.QRCode.CorrectLevel.M,
+      });
+    } catch (err) {
+      console.error(err);
     }
-  }, [header.voucherNo, header.voucherDate, grandTotal]);
+  }
+}, [header.voucherNo, header.voucherDate, grandTotal]);
 
   useEffect(() => {
-    if (barcodeRef.current && window.JsBarcode) {
-      try {
-        window.JsBarcode(barcodeRef.current, header.voucherNo, {
-          format: "CODE128",
-          width: 1.3,
-          height: 36,
-          fontSize: 10,
-          margin: 4,
-          displayValue: true,
-        });
-      } catch {
-        /* non-critical */
-      }
-    }
-  }, [header.voucherNo]);
+  if (!barcodeRef.current) return;
+
+  try {
+    JsBarcode(barcodeRef.current, header.voucherNo, {
+      format: "CODE128",
+      width: 1.3,
+      height: 36,
+      fontSize: 10,
+      margin: 4,
+      displayValue: true,
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}, [header.voucherNo]);
 
   const generatedAt = useMemo(() => new Date().toLocaleString("en-GB"), []);
 

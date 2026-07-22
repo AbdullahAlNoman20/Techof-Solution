@@ -202,39 +202,22 @@ export default function Invoice() {
     window.print();
   };
 
-  useEffect(() => {
-    if (qrRef.current && window.QRCode) {
-      qrRef.current.innerHTML = "";
-      try {
-        // eslint-disable-next-line no-new
-        new window.QRCode(qrRef.current, {
-          text: `${info.invoiceNo}|${info.invoiceDate}|${formatCurrency(grandTotal, info.currency)}`,
-          width: 76,
-          height: 76,
-          correctLevel: window.QRCode.CorrectLevel.M,
-        });
-      } catch {
-        /* non-critical */
-      }
-    }
-  }, [info.invoiceNo, info.invoiceDate, grandTotal, info.currency]);
+ useEffect(() => {
+  if (!barcodeRef.current) return;
 
-  useEffect(() => {
-    if (barcodeRef.current && window.JsBarcode) {
-      try {
-        window.JsBarcode(barcodeRef.current, info.invoiceNo, {
-          format: "CODE128",
-          width: 1.3,
-          height: 36,
-          fontSize: 10,
-          margin: 4,
-          displayValue: true,
-        });
-      } catch {
-        /* non-critical */
-      }
-    }
-  }, [info.invoiceNo]);
+  try {
+    JsBarcode(barcodeRef.current, info.invoiceNo, {
+      format: "CODE128",
+      width: 1.3,
+      height: 36,
+      fontSize: 10,
+      margin: 4,
+      displayValue: true,
+    });
+  } catch (err) {
+    console.error(err);
+  }
+}, [info.invoiceNo]);
 
   const generatedAt = useMemo(() => new Date().toLocaleString("en-GB"), []);
 
