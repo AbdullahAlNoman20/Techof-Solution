@@ -1,3 +1,5 @@
+// admin/src/Pages/Voucher/GenericLedgerVoucher.jsx
+
 import techofLogo from "../../assets/Techof Logo 2.jpeg";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,6 +22,8 @@ import VoucherLineRow from "../../Components/VoucherLineRow";
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+const PAYMENT_MODES = ["Cash", "Bank", "Cheque", "Bkash", "Nagad", "Rocket", "Online Transfer"];
+
 export default function GenericLedgerVoucher({ voucherType }) {
   const config = VOUCHER_TYPE_CONFIG[voucherType];
   const isContra = voucherType === VOUCHER_TYPES.CONTRA;
@@ -27,6 +31,7 @@ export default function GenericLedgerVoucher({ voucherType }) {
   const [voucherNo] = useState(() => generateVoucherNumber(voucherType));
   const [voucherDate, setVoucherDate] = useState(todayISO());
   const [partyName, setPartyName] = useState("");
+  const [paymentMode, setPaymentMode] = useState("Cash");
   const [lines, setLines] = useState([
     emptyVoucherLine(
       config.fixedSide === "debit"
@@ -37,9 +42,9 @@ export default function GenericLedgerVoucher({ voucherType }) {
   ]);
   const [narration, setNarration] = useState("");
   const signatureRoles = config.signatureRoles || [
-    "Prepared By",
-    "Checked By",
     "Approved By",
+    "Paid By",
+    "Signature",
   ];
   const [signatures, setSignatures] = useState(() =>
     signatureRoles.reduce(
@@ -104,7 +109,7 @@ export default function GenericLedgerVoucher({ voucherType }) {
       setError(validation.message);
       return;
     }
-    if (!partyName.trim()) {
+    if (config.partyLabel && !partyName.trim()) {
       setError(`${config.partyLabel} is required.`);
       return;
     }
@@ -112,14 +117,14 @@ export default function GenericLedgerVoucher({ voucherType }) {
     window.print();
   }
 
-  const themeColor = voucherType.includes("receipt") ? "#0f9d58" : "#1d4ed8";
+  const themeColor = voucherType.includes("receipt") ? "#0f9d58" : "#7bb8a8";
   const themeDark = "#0a2540";
 
   return (
     <div className="min-h-screen bg-slate-100 py-8 px-4 flex flex-col items-center gap-4 print:block print:bg-white print:p-0 print:min-h-0">
       <style>{`
         @media print {
-          @page { size: A4; margin: 12mm; }
+          @page { size: A4; margin: 10mm; }
           html, body { height: auto !important; }
           body * { visibility: hidden !important; }
           #ledger-voucher-print, #ledger-voucher-print * { visibility: visible !important; }
@@ -127,11 +132,12 @@ export default function GenericLedgerVoucher({ voucherType }) {
             position: static !important; width: 100% !important; max-width: none !important;
             box-shadow: none !important; border-radius: 0 !important; margin: 0 !important; padding: 0 !important;
           }
-          #ledger-voucher-print section { break-inside: avoid !important; page-break-inside: avoid !important; }
+          #ledger-voucher-print .avoid-break { break-inside: avoid !important; page-break-inside: avoid !important; }
         }
       `}</style>
 
-      <div className="w-full max-w-[820px] flex items-center gap-2 print:hidden">
+      {/* Toolbar */}
+      <div className="w-full max-w-[900px] flex items-center gap-2 print:hidden">
         <Link
           to="/"
           className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-sm font-medium border border-slate-300 text-slate-600 bg-white hover:bg-slate-50 transition"
@@ -150,214 +156,238 @@ export default function GenericLedgerVoucher({ voucherType }) {
         </button>
       </div>
 
+      {/* Outer light border frame — mirrors the pale blue outer border in the template */}
       <div
         id="ledger-voucher-print"
-        className="relative w-full max-w-[820px] bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none p-8 print:p-0"
+        className="relative w-full max-w-[900px] bg-white shadow-lg print:shadow-none p-3"
+        style={{ border: "3px solid #dbe9f2" }}
       >
-        <img
-          src={techofLogo}
-          alt=""
-          aria-hidden="true"
-          onError={(e) => (e.currentTarget.style.display = "none")}
-          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0 print:hidden"
-        />
-        <header
-          className="relative z-10 grid grid-cols-3 gap-3 items-start pb-3 border-b-2"
-          style={{ borderColor: themeDark }}
-        >
-          {/* Left */}
-          <div className="flex items-center gap-3">
-            <img
-              src={techofLogo}
-              alt={`${COMPANY_INFO.name} logo`}
-              onError={(e) => (e.currentTarget.style.display = "none")}
-              className="w-12 h-12 object-contain"
-            />
-
-            <div>
-              <h1 className="text-lg font-bold" style={{ color: themeDark }}>
+        {/* Inner border — mirrors the thin black inner rule in the template */}
+        <div className="border border-slate-800">
+          {/* Company Name & Logo box */}
+          <div className="flex justify-center pt-5 pb-2 px-6 avoid-break">
+            <div
+              className="rounded-sm px-8 py-3 flex items-center gap-3"
+              style={{ border: `3px double ${themeColor}` }}
+            >
+              <img
+                src={techofLogo}
+                alt={`${COMPANY_INFO.name} logo`}
+                onError={(e) => (e.currentTarget.style.display = "none")}
+                className="w-9 h-9 object-contain"
+              />
+              <span className="text-xl font-extrabold text-slate-900 tracking-wide">
                 {COMPANY_INFO.name}
-              </h1>
+              </span>
+            </div>
+          </div>
+          <p className="text-center text-[12px] text-slate-600 pb-3">
+            {COMPANY_INFO.address} · {COMPANY_INFO.phone} · {COMPANY_INFO.email}
+          </p>
 
-              <p className="text-[11px] italic" style={{ color: themeColor }}>
-                {COMPANY_INFO.tagline}
+          {/* Title bar with Ref No / Date */}
+          <div className="border-t border-b border-slate-800 px-5 py-3 flex justify-between items-start avoid-break">
+            <h2 className="text-2xl font-bold" style={{ color: themeColor }}>
+              {config.label}
+            </h2>
+            <div className="text-right text-[12px]">
+              <p className="mb-1">
+                <span className="font-semibold" style={{ color: themeColor }}>
+                  Ref No:
+                </span>{" "}
+                <span className="border-b border-dotted border-slate-400 inline-block min-w-[130px]">
+                  {voucherNo}
+                </span>
               </p>
+              <div className="border border-slate-400 rounded px-3 py-1.5 flex items-center gap-2">
+                <span className="font-semibold text-slate-700">Date:</span>
+                <input
+                  type="date"
+                  value={voucherDate}
+                  onChange={(e) => setVoucherDate(e.target.value)}
+                  className="bg-transparent outline-none text-[12px]"
+                />
+              </div>
             </div>
           </div>
 
-          {/* Center */}
-          <div className="text-center">
-            <h2
-              className="text-lg font-extrabold tracking-wide"
-              style={{ color: themeDark }}
-            >
-              {config.label.toUpperCase()}
-            </h2>
-
-            <p className="text-[11px] text-slate-500">
-              Internal Accounting Voucher
-            </p>
-          </div>
-
-          {/* Right */}
-          <div className="text-right text-[10.5px] text-slate-600 leading-relaxed">
-            <p>{COMPANY_INFO.address}</p>
-            <p>
-              {COMPANY_INFO.phone} · {COMPANY_INFO.email}
-            </p>
-          </div>
-        </header>
-
-        <section className="grid grid-cols-3 gap-x-4 gap-y-2 mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4 text-[12px]">
-          <Field label="Voucher No.">
-            <span className="font-semibold" style={{ color: themeDark }}>
-              {voucherNo}
+          {/* Amount row */}
+          <div className="border-b border-slate-800 px-5 py-2.5 flex items-center gap-3 text-[13px] avoid-break">
+            <span className="font-semibold text-slate-800">Amount:</span>
+            <span className="font-bold text-lg" style={{ color: themeColor }}>
+              ৳ {formatCurrency(validation.totalDebit)}
             </span>
-          </Field>
-          <Field label="Voucher Date">
-            <input
-              type="date"
-              value={voucherDate}
-              onChange={(e) => setVoucherDate(e.target.value)}
-              className="w-full bg-transparent outline-none"
-            />
-          </Field>
-          <Field label={config.partyLabel}>
+          </div>
+
+          {/* Mode of Payment header */}
+          <div className="border-b border-slate-800 py-1.5 text-center font-bold text-[13px] text-slate-800 avoid-break">
+            Mode of Payment
+          </div>
+
+          {/* Cash/Bank/Cheque row */}
+          <div className="border-b border-slate-800 px-5 py-2.5 flex items-center gap-5 flex-wrap text-[12.5px] avoid-break">
+            <span className="font-semibold text-slate-800 shrink-0">
+              Cash/Bank/Cheque:
+            </span>
+            <div className="flex gap-3 flex-wrap">
+              {PAYMENT_MODES.map((m) => (
+                <label key={m} className="flex items-center gap-1.5">
+                  <input
+                    type="radio"
+                    name="paymentMode"
+                    checked={paymentMode === m}
+                    onChange={() => setPaymentMode(m)}
+                  />
+                  {m}
+                </label>
+              ))}
+            </div>
+          </div>
+
+          {/* To whom */}
+          <div className="border-b border-slate-800 px-5 py-2.5 flex items-center gap-3 text-[13px] avoid-break">
+            <span className="font-semibold shrink-0 text-slate-800">
+              {config.partyLabel || "To whom"}:
+            </span>
             <input
               value={partyName}
               maxLength={150}
-              onChange={(e) =>
-                setPartyName(sanitizeNarration(e.target.value, 150))
-              }
-              className="w-full bg-transparent outline-none border-b border-slate-200 py-0.5"
+              onChange={(e) => setPartyName(sanitizeNarration(e.target.value, 150))}
+              className="w-full bg-transparent outline-none border-b border-dotted border-slate-300 py-0.5"
             />
-          </Field>
-        </section>
+          </div>
 
-        <p className="text-[10.5px] text-slate-500 mt-3 italic">
-          {config.natureNote}
-        </p>
+          {/* Amount in words */}
+          <div className="border-b border-slate-800 px-5 py-2.5 flex items-center gap-3 text-[13px] avoid-break">
+            <span className="font-semibold shrink-0 text-slate-800">
+              Amount in words:
+            </span>
+            <span className="italic text-slate-700">{amountInWords}</span>
+          </div>
 
-        <section className="mt-4">
-          <div className="flex justify-between items-center mb-2">
-            <h3
-              className="text-xs font-bold uppercase tracking-wide"
-              style={{ color: themeDark }}
-            >
-              Account Entries
-            </h3>
-            {!isContra && (
-              <button
-                type="button"
-                onClick={addLine}
-                className="print:hidden inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md text-white"
-                style={{ background: themeColor }}
+          {/* Account Entries (full debit/credit ledger table — core functionality retained) */}
+          <div className="border-b border-slate-800 px-5 py-3">
+            <div className="flex justify-between items-center mb-2">
+              <h3
+                className="text-xs font-bold uppercase tracking-wide"
+                style={{ color: themeDark }}
               >
-                <i className="fa-solid fa-plus" /> Add Line
-              </button>
-            )}
-          </div>
-          {error && (
-            <p className="text-rose-600 text-[11px] mb-2 print:hidden">
-              {error}
-            </p>
-          )}
-
-          <div className="overflow-x-auto rounded-lg border border-slate-200">
-            <table className="w-full text-[12px] border-collapse">
-              <thead>
-                <tr
-                  className="text-white text-[11px]"
-                  style={{ background: themeDark }}
+                Account Entries
+              </h3>
+              {!isContra && (
+                <button
+                  type="button"
+                  onClick={addLine}
+                  className="print:hidden inline-flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-md text-white"
+                  style={{ background: themeColor }}
                 >
-                  <th className="p-2 text-left">Account Head</th>
-                  <th className="p-2 text-left">Narration (Being)</th>
-                  <th className="p-2 text-right">Debit</th>
-                  <th className="p-2 text-right">Credit</th>
-                  <th className="p-2 w-[8%] print:hidden"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {lines.map((line, idx) => (
-                  <VoucherLineRow
-                    key={line.id}
-                    line={line}
-                    onChange={updateLine}
-                    onRemove={removeLine}
-                    canRemove={!isContra && lines.length > 2 && idx !== 0}
-                    restrictToCodes={config.restrictToAccountCodes}
-                    restrictToTypes={config.restrictToTypes}
-                    lockedAccountCode={
-                      idx === 0 ? config.fixedAccountCode : null
-                    }
-                    lockedSide={idx === 0 ? config.fixedSide : null}
-                    placeholder={
-                      idx === 0 ? beingPlaceholder : "Being the amount..."
-                    }
-                  />
-                ))}
-              </tbody>
-              <tfoot>
-                <tr className="bg-slate-50 font-semibold">
-                  <td className="p-2 text-right" colSpan={2}>
-                    Total
-                  </td>
-                  <td className="p-2 text-right">
-                    {formatCurrency(validation.totalDebit)}
-                  </td>
-                  <td className="p-2 text-right">
-                    {formatCurrency(validation.totalCredit)}
-                  </td>
-                  <td className="print:hidden" />
-                </tr>
-              </tfoot>
-            </table>
+                  <i className="fa-solid fa-plus" /> Add Line
+                </button>
+              )}
+            </div>
+            {error && (
+              <p className="text-rose-600 text-[11px] mb-2 print:hidden">{error}</p>
+            )}
+
+            <div className="overflow-x-auto rounded-lg border border-slate-200">
+              <table className="w-full text-[12px] border-collapse">
+                <thead>
+                  <tr className="text-white text-[11px]" style={{ background: themeDark }}>
+                    <th className="p-2 text-left">Account Head</th>
+                    <th className="p-2 text-left">Narration (Being)</th>
+                    <th className="p-2 text-right">Debit</th>
+                    <th className="p-2 text-right">Credit</th>
+                    <th className="p-2 w-[8%] print:hidden"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {lines.map((line, idx) => (
+                    <VoucherLineRow
+                      key={line.id}
+                      line={line}
+                      onChange={updateLine}
+                      onRemove={removeLine}
+                      canRemove={!isContra && lines.length > 2 && idx !== 0}
+                      restrictToCodes={config.restrictToAccountCodes}
+                      restrictToTypes={config.restrictToTypes}
+                      lockedAccountCode={idx === 0 ? config.fixedAccountCode : null}
+                      lockedSide={idx === 0 ? config.fixedSide : null}
+                      placeholder={idx === 0 ? beingPlaceholder : "Being the amount..."}
+                    />
+                  ))}
+                </tbody>
+                <tfoot>
+                  <tr className="bg-slate-50 font-semibold">
+                    <td className="p-2 text-right" colSpan={2}>
+                      Total
+                    </td>
+                    <td className="p-2 text-right">{formatCurrency(validation.totalDebit)}</td>
+                    <td className="p-2 text-right">{formatCurrency(validation.totalCredit)}</td>
+                    <td className="print:hidden" />
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+            {!validation.valid && lines.some((l) => l.accountCode) && (
+              <p className="text-rose-600 text-[11px] mt-1 print:hidden">
+                {validation.message}
+              </p>
+            )}
+            <p className="text-[10.5px] text-slate-500 mt-2 italic">{config.natureNote}</p>
           </div>
-          {!validation.valid && lines.some((l) => l.accountCode) && (
-            <p className="text-rose-600 text-[11px] mt-1 print:hidden">
-              {validation.message}
-            </p>
-          )}
-        </section>
 
-        <section className="mt-4 rounded-xl border border-slate-200 p-4">
-          <p className="text-[11px] text-slate-500">Amount in Words</p>
-          <p
-            className="text-[12.5px] font-semibold"
-            style={{ color: themeDark }}
-          >
-            {amountInWords}
-          </p>
-        </section>
+          {/* Being / Payee split row — mirrors template's two-column layout */}
+          <div className="grid grid-cols-2 border-b border-slate-800 text-[13px] avoid-break">
+            <div className="p-3 border-r border-slate-800">
+              <p className="font-semibold mb-1 text-slate-800">Being:</p>
+              <textarea
+                rows={4}
+                maxLength={400}
+                value={narration}
+                placeholder={beingPlaceholder}
+                onChange={(e) => setNarration(sanitizeNarration(e.target.value, 400))}
+                className="w-full bg-transparent outline-none resize-none text-slate-700 text-[12.5px] leading-relaxed"
+              />
+            </div>
+            <div className="p-3">
+              <p className="font-semibold mb-1 text-slate-800">Payee:</p>
+              <p className="text-slate-700 text-[12.5px]">{partyName || "—"}</p>
+            </div>
+          </div>
 
-        <section
-          className="relative z-10 grid gap-4 mt-6"
-          style={{
-            gridTemplateColumns: `repeat(${signatureRoles.length}, minmax(0, 1fr))`,
-          }}
-        >
-          {signatureRoles.map((role, idx) => (
-            <SignatureBlock
-              key={role}
-              label={role}
-              name={signatures[role]?.name}
-              onName={
-                idx === 0 ? (v) => updateSignatureField(role, "name", v) : null
-              }
-              dateValue={signatures[role]?.date}
-              onDate={(v) => updateSignatureField(role, "date", v)}
-              nameless={idx !== 0}
-            />
-          ))}
-        </section>
+          {/* Approved By / Paid By / Signature footer — mirrors template's 3-column grid */}
+          <div className="grid grid-cols-3 text-[12px] avoid-break">
+            {signatureRoles.slice(0, 3).map((role, idx) => (
+              <div
+                key={role}
+                className={`p-3 space-y-2 ${idx < 2 ? "border-r border-slate-800" : ""}`}
+              >
+                <p className="font-semibold text-slate-800">{role}:</p>
+                {idx === 0 && (
+                  <input
+                    value={signatures[role]?.name || ""}
+                    onChange={(e) => updateSignatureField(role, "name", e.target.value)}
+                    maxLength={80}
+                    placeholder="Name"
+                    className="w-full text-[11.5px] border-b border-slate-200 outline-none py-0.5 bg-transparent"
+                  />
+                )}
+                <div className="h-8 border-b border-slate-400" />
+                <input
+                  type="date"
+                  value={signatures[role]?.date || ""}
+                  onChange={(e) => updateSignatureField(role, "date", e.target.value)}
+                  className="text-[11px] outline-none bg-transparent"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <footer
-          className="relative z-10 text-center text-[10px] text-slate-500 mt-6 pt-3 border-t-4"
-          style={{ borderColor: themeColor }}
-        >
+        {/* Footer strip — sits outside the bordered template box */}
+        <footer className="text-center text-[10px] text-slate-500 mt-3 pt-2 avoid-break">
           <p>
-            This voucher is an official internal financial record of{" "}
-            {COMPANY_INFO.name}.
+            This voucher is an official internal financial record of {COMPANY_INFO.name}.
           </p>
           <p>
             Voucher No: {voucherNo} · Generated: {generatedAt} · Copyright ©{" "}
@@ -365,43 +395,6 @@ export default function GenericLedgerVoucher({ voucherType }) {
           </p>
         </footer>
       </div>
-    </div>
-  );
-}
-
-function Field({ label, children }) {
-  return (
-    <label className="flex flex-col gap-1">
-      <span className="text-slate-500 text-[10.5px]">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function SignatureBlock({ label, name, onName, dateValue, onDate, nameless }) {
-  return (
-    <div className="pt-2 space-y-1.5">
-      <p className="text-[11px] font-bold uppercase text-slate-700">{label}</p>
-      {!nameless && (
-        <input
-          value={name}
-          onChange={(e) => onName(e.target.value)}
-          maxLength={80}
-          placeholder="Name"
-          className="w-full text-[11.5px] border-b border-slate-200 outline-none py-0.5 bg-transparent"
-        />
-      )}
-      <div className="h-7 border-b border-slate-400 text-[10px] text-slate-400">
-        Signature
-      </div>
-      {onDate && (
-        <input
-          type="date"
-          value={dateValue}
-          onChange={(e) => onDate(e.target.value)}
-          className="text-[11px] outline-none bg-transparent"
-        />
-      )}
     </div>
   );
 }
