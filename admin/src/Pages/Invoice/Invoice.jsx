@@ -87,6 +87,7 @@ export default function Invoice() {
   const [rows, setRows] = useState([emptyRow()]);
   const [additionalCharges, setAdditionalCharges] = useState(0);
   const [previousDue, setPreviousDue] = useState(0);
+  const [previousPaid, setPreviousPaid] = useState(0);
   const [paidAmount, setPaidAmount] = useState(0);
   const [notes, setNotes] = useState(
     "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated.",
@@ -130,9 +131,10 @@ export default function Invoice() {
     return total > 0 ? total : 0;
   }, [subtotal, totalDiscount, totalVat, additionalCharges, previousDue]);
   const amountDue = useMemo(() => {
-    const due = grandTotal - clampNumber(paidAmount);
+    const due =
+      grandTotal - clampNumber(paidAmount) - clampNumber(previousPaid);
     return due > 0 ? due : 0;
-  }, [grandTotal, paidAmount]);
+  }, [grandTotal, paidAmount, previousPaid]);
 
   const amountInWords = useMemo(
     () =>
@@ -624,6 +626,11 @@ export default function Invoice() {
               label="Previous Due"
               value={previousDue}
               onChange={(v) => setPreviousDue(clampNumber(v))}
+            />
+            <SummaryEditLine
+              label="Previous Paid"
+              value={previousPaid}
+              onChange={(v) => setPreviousPaid(clampNumber(v))}
             />
             <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
               <span className="text-sm font-bold">Grand Total</span>
