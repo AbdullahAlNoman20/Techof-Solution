@@ -91,8 +91,6 @@ export default function Invoice() {
   const [advancePaidDate, setAdvancePaidDate] = useState(todayISO());
   const [overallDiscount, setOverallDiscount] = useState(0);
   const [overallVat, setOverallVat] = useState(0);
-  const [overallDiscount, setOverallDiscount] = useState(0);
-  const [overallVat, setOverallVat] = useState(0);
   const [notes, setNotes] = useState(
     "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated.",
   );
@@ -658,7 +656,9 @@ export default function Invoice() {
                   type="number"
                   step="0.01"
                   value={overallDiscount}
-                  onChange={(e) => setOverallDiscount(clampNumber(e.target.value))}
+                  onChange={(e) =>
+                    setOverallDiscount(clampNumber(e.target.value))
+                  }
                   title="Overall discount, added on top of any per-item discount"
                   className="print:hidden w-16 text-right border border-slate-200 rounded-md px-1.5 py-0.5 outline-none focus:border-[#0A66C2]"
                 />
@@ -739,7 +739,9 @@ export default function Invoice() {
               </div>
             ) : (
               <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-none">
-                <span className="text-sm font-bold print:font-semibold">Grand Total</span>
+                <span className="text-sm font-bold print:font-semibold">
+                  Grand Total
+                </span>
                 <span className="text-base font-extrabold print:font-semibold">
                   {formatCurrency(grandTotal, info.currency)}
                 </span>
@@ -842,7 +844,9 @@ function LabeledInput({ label, value, onChange, type = "text", error }) {
           value={value}
           onChange={(e) => onChange(e.target.value)}
           className={`text-right w-[60%] border-b outline-none bg-transparent py-0.5 ${
-            error ? "border-rose-400" : "border-slate-200 focus:border-[#0A66C2]"
+            error
+              ? "border-rose-400"
+              : "border-slate-200 focus:border-[#0A66C2]"
           }`}
         />
       </div>
