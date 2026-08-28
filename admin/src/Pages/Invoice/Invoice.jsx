@@ -89,6 +89,10 @@ export default function Invoice() {
   const [previousDue, setPreviousDue] = useState(0);
   const [advancePaid, setAdvancePaid] = useState(0);
   const [advancePaidDate, setAdvancePaidDate] = useState(todayISO());
+  const [overallDiscount, setOverallDiscount] = useState(0);
+  const [overallVat, setOverallVat] = useState(0);
+  const [overallDiscount, setOverallDiscount] = useState(0);
+  const [overallVat, setOverallVat] = useState(0);
   const [notes, setNotes] = useState(
     "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated.",
   );
@@ -107,11 +111,11 @@ export default function Invoice() {
       ),
     [rows],
   );
-  const totalDiscount = useMemo(
+  const rowsDiscount = useMemo(
     () => rows.reduce((sum, r) => sum + clampNumber(r.discount), 0),
     [rows],
   );
-  const totalVat = useMemo(
+  const rowsVat = useMemo(
     () =>
       rows.reduce((sum, r) => {
         const base =
@@ -120,6 +124,16 @@ export default function Invoice() {
         return sum + (base * clampNumber(r.vat, 0, 100)) / 100;
       }, 0),
     [rows],
+  );
+  // Overall discount/VAT lets the user add a summary-level adjustment
+  // even when individual rows have no discount/VAT of their own.
+  const totalDiscount = useMemo(
+    () => rowsDiscount + clampNumber(overallDiscount),
+    [rowsDiscount, overallDiscount],
+  );
+  const totalVat = useMemo(
+    () => rowsVat + clampNumber(overallVat),
+    [rowsVat, overallVat],
   );
   const grandTotal = useMemo(() => {
     const total =
@@ -260,6 +274,23 @@ export default function Invoice() {
             break-inside: avoid !important;
             page-break-inside: avoid !important;
           }
+          /* Service Details is the only section allowed to split across pages.
+             It re-flows naturally and repeats its header row on every new page. */
+          #invoice-print-area section.service-section {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+          #invoice-print-area section.service-section table {
+            break-inside: auto !important;
+            page-break-inside: auto !important;
+          }
+          #invoice-print-area section.service-section thead {
+            display: table-header-group;
+          }
+          #invoice-print-area section.service-section tr {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
           #invoice-print-area h1 { font-size: 15px !important; }
           #invoice-print-area h3 { font-size: 10px !important; }
           #invoice-print-area table { font-size: 10.5px !important; }
@@ -316,7 +347,7 @@ export default function Invoice() {
               <p className="text-[11px] italic text-[#0A66C2]">
                 {COMPANY.tagline}
               </p>
-              <span className="inline-block mt-1.5 text-[10px] font-bold tracking-widest text-white bg-[#0A66C2] px-2.5 py-0.5 rounded-full">
+              <span className="inline-block mt-1.5 text-[10px] font-bold tracking-widest text-white bg-[#0A66C2] px-2.5 py-0.5 rounded-full print:bg-none print:bg-white print:text-black print:border print:border-black">
                 INVOICE
               </span>
             </div>
@@ -410,7 +441,7 @@ export default function Invoice() {
                 <select
                   value={info.status}
                   onChange={(e) => updateInfo("status", e.target.value, 20)}
-                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full outline-none ${STATUS_STYLES[info.status]}`}
+                  className={`text-[11px] font-bold px-2.5 py-1 rounded-full outline-none print:bg-white print:text-black print:border print:border-black ${STATUS_STYLES[info.status]}`}
                 >
                   <option>Paid</option>
                   <option>Partial</option>
@@ -450,7 +481,7 @@ export default function Invoice() {
         </section>
 
         {/* Service Table */}
-        <section className="relative z-10 mt-5 print:mt-3">
+        <section className="relative z-10 mt-5 print:mt-3 service-section">
           <div className="flex justify-between items-center mb-2">
             <h3 className="text-xs font-bold uppercase tracking-wide text-[#1B263B]">
               Service Details
@@ -470,7 +501,7 @@ export default function Invoice() {
           <div className="overflow-x-auto rounded-lg border border-slate-200">
             <table className="w-full text-[12px] border-collapse">
               <thead>
-                <tr className="bg-[#1B263B] text-white text-[11px]">
+                <tr className="bg-[#1B263B] text-white text-[11px] print:bg-white print:text-black print:border-b-2 print:border-black">
                   <th className="p-2 print:p-1 text-left w-[4%]">SL</th>
                   <th className="p-2 print:p-1 text-left w-[30%]">
                     Service / Description
@@ -616,14 +647,41 @@ export default function Invoice() {
               label="Subtotal"
               value={formatCurrency(subtotal, info.currency)}
             />
-            <SummaryLine
-              label="Discount"
-              value={`- ${formatCurrency(totalDiscount, info.currency)}`}
-            />
-            <SummaryLine
-              label="VAT / Tax"
-              value={formatCurrency(totalVat, info.currency)}
-            />
+
+            <div className="flex justify-between items-center py-1 text-[12.5px] border-b border-dashed border-slate-200 gap-2">
+              <span className="text-slate-600 shrink-0">Discount</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-800">
+                  - {formatCurrency(totalDiscount, info.currency)}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={overallDiscount}
+                  onChange={(e) => setOverallDiscount(clampNumber(e.target.value))}
+                  title="Overall discount, added on top of any per-item discount"
+                  className="print:hidden w-16 text-right border border-slate-200 rounded-md px-1.5 py-0.5 outline-none focus:border-[#0A66C2]"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center py-1 text-[12.5px] border-b border-dashed border-slate-200 gap-2">
+              <span className="text-slate-600 shrink-0">VAT / Tax</span>
+              <div className="flex items-center gap-2">
+                <span className="font-medium text-slate-800">
+                  {formatCurrency(totalVat, info.currency)}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={overallVat}
+                  onChange={(e) => setOverallVat(clampNumber(e.target.value))}
+                  title="Overall VAT/Tax, added on top of any per-item VAT"
+                  className="print:hidden w-16 text-right border border-slate-200 rounded-md px-1.5 py-0.5 outline-none focus:border-[#0A66C2]"
+                />
+              </div>
+            </div>
+
             <SummaryEditLine
               label="Additional Charges"
               value={additionalCharges}
@@ -668,21 +726,21 @@ export default function Invoice() {
             </div>
 
             {hasAdvancePaid ? (
-              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
-                <span className="text-sm font-bold leading-tight">
+              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-none">
+                <span className="text-sm font-bold leading-tight print:font-semibold">
                   Total Amount Due
-                  <span className="block font-normal text-[9.5px] opacity-80">
+                  <span className="block font-normal text-[9.5px] opacity-80 print:opacity-100">
                     (VAT / Tax Applicable as per Govt. Rate)
                   </span>
                 </span>
-                <span className="text-base font-extrabold">
+                <span className="text-base font-extrabold print:font-semibold">
                   {formatCurrency(totalAmountDue, info.currency)}
                 </span>
               </div>
             ) : (
-              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
-                <span className="text-sm font-bold">Grand Total</span>
-                <span className="text-base font-extrabold">
+              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-none">
+                <span className="text-sm font-bold print:font-semibold">Grand Total</span>
+                <span className="text-base font-extrabold print:font-semibold">
                   {formatCurrency(grandTotal, info.currency)}
                 </span>
               </div>
