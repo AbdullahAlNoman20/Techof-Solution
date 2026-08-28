@@ -326,7 +326,7 @@ export default function Invoice() {
           alt=""
           aria-hidden="true"
           onError={(e) => (e.currentTarget.style.display = "none")}
-          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0 print:hidden"
+          className="pointer-events-none select-none absolute inset-0 m-auto w-64 opacity-[0.06] z-0 print:block print:opacity-[0.08]"
         />
 
         {/* Header */}
@@ -726,7 +726,7 @@ export default function Invoice() {
             </div>
 
             {hasAdvancePaid ? (
-              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-none">
+              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-md">
                 <span className="text-sm font-bold leading-tight print:font-semibold">
                   Total Amount Due
                   <span className="block font-normal text-[9.5px] opacity-80 print:opacity-100">
@@ -738,10 +738,8 @@ export default function Invoice() {
                 </span>
               </div>
             ) : (
-              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-none">
-                <span className="text-sm font-bold print:font-semibold">
-                  Grand Total
-                </span>
+              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3 print:bg-none print:bg-white print:text-black print:border print:border-black print:rounded-md">
+                <span className="text-sm font-bold print:font-semibold">Grand Total</span>
                 <span className="text-base font-extrabold print:font-semibold">
                   {formatCurrency(grandTotal, info.currency)}
                 </span>
