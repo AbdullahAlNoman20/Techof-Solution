@@ -773,14 +773,36 @@ export default function Invoice() {
 }
 
 function LabeledInput({ label, value, onChange, type = "text", error }) {
+  const isGrowable = type === "text" || type === "email";
+
+  if (!isGrowable) {
+    return (
+      <div className="flex justify-between items-center gap-2">
+        <span className="text-slate-500 shrink-0">{label}</span>
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className={`text-right w-[60%] border-b outline-none bg-transparent py-0.5 ${
+            error ? "border-rose-400" : "border-slate-200 focus:border-[#0A66C2]"
+          }`}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex justify-between items-center gap-2">
-      <span className="text-slate-500 shrink-0">{label}</span>
-      <input
-        type={type}
+    <div className="flex justify-between items-start gap-2">
+      <span className="text-slate-500 shrink-0 pt-0.5">{label}</span>
+      <textarea
         value={value}
+        rows={1}
         onChange={(e) => onChange(e.target.value)}
-        className={`text-right w-[60%] border-b outline-none bg-transparent py-0.5 ${
+        onInput={(e) => {
+          e.target.style.height = "auto";
+          e.target.style.height = `${e.target.scrollHeight}px`;
+        }}
+        className={`text-right w-[60%] border-b outline-none bg-transparent py-0.5 resize-none overflow-hidden leading-snug ${
           error ? "border-rose-400" : "border-slate-200 focus:border-[#0A66C2]"
         }`}
       />
