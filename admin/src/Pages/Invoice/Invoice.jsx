@@ -72,13 +72,13 @@ const initialInvoiceInfo = () => ({
 });
 
 const initialBank = () => ({
-  bankName: "",
-  accountName: "",
-  accountNumber: "",
-  branch: "",
-  bkash: "",
-  nagad: "",
-  rocket: "",
+  bankName: "City Bank",
+  accountName: "TECHOF SOLUTION",
+  accountNumber: "1325128524001",
+  branch: "Banani Sub Branch, Dhaka",
+  bkash: "X",
+  nagad: "X",
+  rocket: "X",
 });
 
 export default function Invoice() {
@@ -87,8 +87,8 @@ export default function Invoice() {
   const [rows, setRows] = useState([emptyRow()]);
   const [additionalCharges, setAdditionalCharges] = useState(0);
   const [previousDue, setPreviousDue] = useState(0);
-  const [previousPaid, setPreviousPaid] = useState(0);
-  const [paidAmount, setPaidAmount] = useState(0);
+  const [advancePaid, setAdvancePaid] = useState(0);
+  const [advancePaidDate, setAdvancePaidDate] = useState(todayISO());
   const [notes, setNotes] = useState(
     "Thank you for choosing TechOf Solution.\nPayment should be completed before the due date.\nThis invoice is system generated.",
   );
@@ -130,19 +130,21 @@ export default function Invoice() {
       clampNumber(previousDue);
     return total > 0 ? total : 0;
   }, [subtotal, totalDiscount, totalVat, additionalCharges, previousDue]);
-  const amountDue = useMemo(() => {
-    const due =
-      grandTotal - clampNumber(paidAmount) - clampNumber(previousPaid);
+
+  const hasAdvancePaid = clampNumber(advancePaid) > 0;
+
+  const totalAmountDue = useMemo(() => {
+    const due = grandTotal - clampNumber(advancePaid);
     return due > 0 ? due : 0;
-  }, [grandTotal, paidAmount, previousPaid]);
+  }, [grandTotal, advancePaid]);
 
   const amountInWords = useMemo(
     () =>
       numberToWords(
-        grandTotal,
+        hasAdvancePaid ? totalAmountDue : grandTotal,
         info.currency === "BDT" ? "Taka" : info.currency,
       ),
-    [grandTotal, info.currency],
+    [hasAdvancePaid, totalAmountDue, grandTotal, info.currency],
   );
 
   const rowTotal = (r) => {
@@ -204,22 +206,22 @@ export default function Invoice() {
     window.print();
   };
 
- useEffect(() => {
-  if (!barcodeRef.current) return;
+  useEffect(() => {
+    if (!barcodeRef.current) return;
 
-  try {
-    JsBarcode(barcodeRef.current, info.invoiceNo, {
-      format: "CODE128",
-      width: 1.3,
-      height: 36,
-      fontSize: 10,
-      margin: 4,
-      displayValue: true,
-    });
-  } catch (err) {
-    console.error(err);
-  }
-}, [info.invoiceNo]);
+    try {
+      JsBarcode(barcodeRef.current, info.invoiceNo, {
+        format: "CODE128",
+        width: 1.3,
+        height: 36,
+        fontSize: 10,
+        margin: 4,
+        displayValue: true,
+      });
+    } catch (err) {
+      console.error(err);
+    }
+  }, [info.invoiceNo]);
 
   const generatedAt = useMemo(() => new Date().toLocaleString("en-GB"), []);
 
@@ -490,15 +492,20 @@ export default function Invoice() {
                     className={idx % 2 === 0 ? "bg-white" : "bg-blue-50/40"}
                   >
                     <td className="p-2 border-b border-slate-200">{idx + 1}</td>
-                    <td className="p-2 border-b border-slate-200">
-                      <input
+                    <td className="p-2 border-b border-slate-200 align-top">
+                      <textarea
                         value={row.description}
                         maxLength={250}
+                        rows={1}
                         placeholder="e.g. Web application development – Phase 1"
                         onChange={(e) =>
                           updateRow(row.id, "description", e.target.value)
                         }
-                        className="w-full bg-transparent outline-none focus:bg-white rounded px-1"
+                        onInput={(e) => {
+                          e.target.style.height = "auto";
+                          e.target.style.height = `${e.target.scrollHeight}px`;
+                        }}
+                        className="w-full bg-transparent outline-none focus:bg-white rounded px-1 resize-none overflow-hidden leading-snug"
                       />
                     </td>
                     <td className="p-2 border-b border-slate-200 text-right">
@@ -627,32 +634,62 @@ export default function Invoice() {
               value={previousDue}
               onChange={(v) => setPreviousDue(clampNumber(v))}
             />
-            <SummaryEditLine
-              label="Previous Paid"
-              value={previousPaid}
-              onChange={(v) => setPreviousPaid(clampNumber(v))}
-            />
-            <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
-              <span className="text-sm font-bold">Grand Total</span>
-              <span className="text-base font-extrabold">
-                {formatCurrency(grandTotal, info.currency)}
+
+            <div className="flex justify-between items-center py-1.5 text-[12.5px] border-b border-dashed border-slate-200 gap-2">
+              <span className="text-slate-600 shrink-0">
+                Advanced Paid
+                {hasAdvancePaid && advancePaidDate && (
+                  <span className="block text-[10px] text-slate-400 print:inline print:ml-1">
+                    (
+                    {new Date(advancePaidDate).toLocaleDateString("en-GB", {
+                      day: "numeric",
+                      month: "long",
+                      year: "numeric",
+                    })}
+                    )
+                  </span>
+                )}
               </span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <input
+                  type="date"
+                  value={advancePaidDate}
+                  onChange={(e) => setAdvancePaidDate(e.target.value)}
+                  className="print:hidden text-[11px] border border-slate-200 rounded-md px-1.5 py-0.5 outline-none focus:border-[#0A66C2]"
+                />
+                <input
+                  type="number"
+                  step="0.01"
+                  value={advancePaid}
+                  onChange={(e) => setAdvancePaid(clampNumber(e.target.value))}
+                  className="w-24 text-right border border-slate-200 rounded-md px-2 py-0.5 outline-none focus:border-[#0A66C2]"
+                />
+              </div>
             </div>
-            <SummaryEditLine
-              label="Paid Amount"
-              value={paidAmount}
-              onChange={(v) => setPaidAmount(clampNumber(v))}
-            />
-            <div className="flex justify-between items-center pt-2 border-t border-slate-200 mt-1">
-              <span className="text-sm font-bold text-rose-600">
-                Amount Due
-              </span>
-              <span className="text-sm font-extrabold text-rose-600">
-                {formatCurrency(amountDue, info.currency)}
-              </span>
-            </div>
-            <p className="text-[11.5px] font-semibold text-[#1B263B] mt-3">
-              {amountInWords}
+
+            {hasAdvancePaid ? (
+              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
+                <span className="text-sm font-bold leading-tight">
+                  Total Amount Due
+                  <span className="block font-normal text-[9.5px] opacity-80">
+                    (VAT / Tax Applicable as per Govt. Rate)
+                  </span>
+                </span>
+                <span className="text-base font-extrabold">
+                  {formatCurrency(totalAmountDue, info.currency)}
+                </span>
+              </div>
+            ) : (
+              <div className="flex justify-between items-center py-2 mt-2 rounded-lg bg-gradient-to-r from-[#0A66C2] to-[#1B263B] text-white px-3">
+                <span className="text-sm font-bold">Grand Total</span>
+                <span className="text-base font-extrabold">
+                  {formatCurrency(grandTotal, info.currency)}
+                </span>
+              </div>
+            )}
+
+            <p className="text-[11.5px] font-semibold text-slate-800 mt-3">
+              In Word: {amountInWords}
             </p>
           </div>
         </section>
@@ -704,7 +741,10 @@ export default function Invoice() {
             </p>
 
             <p className="text-[12px] font-semibold text-slate-700">
-              Managing Director
+              Abdullah Al Noman
+            </p>
+            <p className="text-[11px] text-slate-500">
+              AI/ML Engineer And R&amp;D Lead
             </p>
 
             <p className="text-[11px] text-slate-500">{COMPANY.name}</p>
